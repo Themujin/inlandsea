@@ -41,6 +41,22 @@ test.describe("live GPS (mocked)", () => {
     await expect(page.getByRole("button", { name: "Start monitoring" })).toBeVisible();
   });
 
+  test("monitoring from the map: status card, follow on, legend hidden", async ({ page, context }) => {
+    await context.setGeolocation(inland(500));
+    await page.goto("/en/");
+    await page.getByRole("button", { name: "Start monitoring" }).click();
+    const card = page.getByTestId("map-status");
+    await expect(card).toHaveAttribute("data-state", "SAFE");
+    await expect(page.getByTestId("map-distance")).toHaveText(/^4\d\d m$/);
+    await expect(card.getByTestId("inland-arrow")).toBeVisible();
+    await expect(page.getByLabel("Follow me")).toBeChecked();
+    await expect(page.getByText("Regulated area")).toHaveCount(0);
+
+    await page.getByRole("button", { name: "Stop" }).click();
+    await expect(card).toHaveCount(0);
+    await expect(page.getByText("Regulated area")).toBeVisible();
+  });
+
   test("Doha: OUT_OF_AREA", async ({ page, context }) => {
     await context.setGeolocation({ latitude: 25.29, longitude: 51.53, accuracy: 5 });
     await page.goto("/ar/monitor/");

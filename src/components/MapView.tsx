@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Dictionary } from "@/i18n";
 import { BRAND } from "@/lib/brandColors";
 import { loadEngineData } from "@/lib/engineData";
-import { formatDistance } from "@/lib/format";
+import { MapStatusCard } from "./MapStatusCard";
 import type { SensorFix } from "@/sensors/types";
 import { useMonitor } from "@/store/monitor";
 
@@ -35,6 +35,7 @@ const SATELLITE_STYLE: StyleSpecification = {
   layers: [GROUND, { id: "satellite", type: "raster", source: "satellite" }],
 };
 
+const INITIAL_ZOOM_IN = 1;
 const EARTH_CIRCUMFERENCE_M = 40_075_016.686;
 
 /** Line width in px that spans `metres` on the ground at `lat` (MapLibre uses 512 px tiles). */
@@ -88,7 +89,6 @@ export default function MapView({ t }: { t: Dictionary }) {
   const [basemap, setBasemap] = useState(readBasemap);
   const [follow, setFollow] = useState(false);
   const followRef = useRef(follow);
-  const result = useMonitor((s) => s.result);
   const mode = useMonitor((s) => s.mode);
   const error = useMonitor((s) => s.error);
   const start = useMonitor((s) => s.start);
@@ -187,6 +187,10 @@ export default function MapView({ t }: { t: Dictionary }) {
 
       const b = data.geometry.corridorBbox;
       map.fitBounds([b.minX, b.minY, b.maxX, b.maxY], { padding: 24, duration: 0 });
+      // Open a step closer than the whole stretch; the ends are a pan away.
+      map.jumpTo({ zoom: map.getZoom() + INITIAL_ZOOM_IN });
+      // Start the credit collapsed to its (i) button so it does not cover the status card.
+      container.current?.querySelector(".maplibregl-ctrl-attrib")?.classList.remove("maplibregl-compact-show");
       map.setMaxBounds([b.minX - 0.3, b.minY - 0.3, b.maxX + 0.3, b.maxY + 0.3]);
 
       const push = () => {
@@ -218,7 +222,12 @@ export default function MapView({ t }: { t: Dictionary }) {
     setBasemap(next);
   };
 
-  const state = result?.state;
+  // Starting from the map means driving: follow the car by default.
+  const startDriving = () => {
+    setFollow(true);
+    start("gps");
+  };
+
   return (
     <div className="relative flex-1">
       {/* maplibre-gl.css forces position: relative on the map element, so size it from a wrapper. */}
@@ -226,26 +235,7 @@ export default function MapView({ t }: { t: Dictionary }) {
         <div ref={container} className="h-full w-full" data-testid="map" />
       </div>
 
-      {mode && state && (
-        // Below the top-left credit badge.
-        <div className="absolute inset-x-3 top-14 flex justify-center">
-          <span
-            data-state={state}
-            className={`rounded-button px-4 py-2 font-bold shadow-lg ${
-              state === "DANGER"
-                ? "bg-state-danger-strong text-white"
-                : state === "CAUTION"
-                  ? "bg-state-caution text-ink"
-                  : state === "SAFE"
-                    ? "bg-state-safe-strong text-white"
-                    : "bg-state-idle-strong text-white"
-            }`}
-          >
-            {t.states[state]}
-            {result?.distanceM !== null && result?.distanceM !== undefined && ` · ${formatDistance(result.distanceM, t)}`}
-          </span>
-        </div>
-      )}
+      {mode && <MapStatusCard t={t} />}
 
       <div className="absolute inset-x-3 bottom-3 flex flex-col gap-2 rounded-card bg-[var(--app-bg)]/90 p-3 text-sm shadow-lg backdrop-blur">
         {/* The map is the home screen, so monitoring can start right here. */}
@@ -260,18 +250,24 @@ export default function MapView({ t }: { t: Dictionary }) {
         ) : (
           <button
             type="button"
-            onClick={() => start("gps")}
+            onClick={startDriving}
             className="rounded-button bg-sea px-5 py-3 text-lg font-bold text-foam shadow dark:bg-lagoon dark:text-ink"
           >
             {t.start}
           </button>
         )}
         {error && !mode && <p className="font-semibold text-state-danger-strong">{t.errors[error]}</p>}
-        <div className="flex flex-wrap gap-x-4 gap-y-1">
-          <Legend swatch={<span className="h-1 w-5 rounded bg-sand" />} label={t.map.legendShore} />
-          <Legend swatch={<span className="h-3 w-5 rounded bg-alert/40" />} label={t.map.legendBand} />
-          <Legend swatch={<span className="h-3 w-5 rounded border border-dashed border-lagoon bg-lagoon/15" />} label={t.map.legendCorridor} />
-        </div>
+        {/* While driving, keep the panel small: the map and status card matter most. */}
+        {!mode && (
+          <div className="flex flex-wrap gap-x-4 gap-y-1">
+            <Legend swatch={<span className="h-1 w-5 rounded bg-sand" />} label={t.map.legendShore} />
+            <Legend swatch={<span className="h-3 w-5 rounded bg-alert/40" />} label={t.map.legendBand} />
+            <Legend
+              swatch={<span className="h-3 w-5 rounded border border-dashed border-lagoon bg-lagoon/15" />}
+              label={t.map.legendCorridor}
+            />
+          </div>
+        )}
         <div className="flex flex-wrap items-center gap-4">
           <label className="flex items-center gap-2">
             <input type="checkbox" checked={follow} onChange={(e) => setFollow(e.target.checked)} />
@@ -282,7 +278,7 @@ export default function MapView({ t }: { t: Dictionary }) {
             {t.map.basemap}
           </label>
         </div>
-        {basemap && <p className="text-xs text-muted">{t.map.basemapNote}</p>}
+        {basemap && !mode && <p className="text-xs text-muted">{t.map.basemapNote}</p>}
       </div>
     </div>
   );

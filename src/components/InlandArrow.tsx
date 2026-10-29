@@ -9,10 +9,12 @@ interface Props {
   speed: number | null;
   t: Dictionary;
   size?: number;
+  /** Hide the caption (it stays as the accessible label). */
+  compact?: boolean;
 }
 
 /** Points from the shoreline to the user, i.e. the way to drive to get away from the water. */
-export function InlandArrow({ bearing, heading, speed, t, size = 96 }: Props) {
+export function InlandArrow({ bearing, heading, speed, t, size = 96, compact = false }: Props) {
   if (bearing === null) return null;
   const relative = heading !== null && speed !== null && speed >= MIN_HEADING_SPEED;
   const rotation = relative ? bearing - heading : bearing;
@@ -30,7 +32,7 @@ export function InlandArrow({ bearing, heading, speed, t, size = 96 }: Props) {
         <circle cx="50" cy="50" r="47" fill="none" stroke="currentColor" strokeOpacity="0.35" strokeWidth="3" />
         <path d="M50 10 L78 62 L56 54 V88 H44 V54 L22 62 Z" fill="currentColor" />
       </svg>
-      <figcaption className="text-sm opacity-90">{label}</figcaption>
+      {!compact && <figcaption className="text-sm opacity-90">{label}</figcaption>}
     </figure>
   );
 }
