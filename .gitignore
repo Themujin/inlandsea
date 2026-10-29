@@ -46,3 +46,6 @@ next-env.d.ts
 
 # generated service worker
 /public/sw.js
+
+# copied from node_modules by scripts/copy-vendor.ts
+/public/vendor/

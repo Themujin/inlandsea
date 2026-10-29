@@ -14,3 +14,5 @@ Spec: docs/SPEC.md (source of truth)
 @AGENTS.md
 - Brand: docs/BRAND.md. Colours/type come from app/brand.css tokens (bg-sea, bg-state-danger-strong, ...);
   never hard-code hex in components. White text only on -strong state shades.
+- Map: MapLibre worker is served from public/vendor (copied by scripts/copy-vendor.ts on
+  predev/prebuild). Online basemap is opt-in only: tile requests reveal the viewed area.

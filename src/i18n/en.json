@@ -16,10 +16,49 @@
     "OUT_OF_AREA": "Not on the Sealine – Khor Al Adaid coast",
     "NO_FIX": "No position, or accuracy worse than 50 m"
   },
-  "monitorComingSoon": "Live monitoring is coming in the next build (M3).",
   "geometryWarning": "Placeholder shoreline data — not for real use.",
   "switchLanguage": "العربية",
   "disclaimerTitle": "Disclaimer",
   "disclaimer": "Shoreline Guard is an unofficial safety aid. Distances are estimates based on your phone's GPS and mapped shoreline data, which may be inaccurate. Always follow signs, ranger and Lekhwiya instructions. You remain responsible for complying with the law.",
-  "privacy": "Your location never leaves this device."
+  "privacy": "Your location never leaves this device.",
+  "start": "Start monitoring",
+  "simulate": "Simulate a drive",
+  "simulateHint": "Replays a sample coastal drive. For testing only.",
+  "stop": "Stop",
+  "starting": "Starting…",
+  "simulation": "Simulation",
+  "accuracy": "GPS ±{n} m",
+  "metres": "m",
+  "farAway": "over 1 km",
+  "fromShore": "from the shoreline",
+  "inland": "Inland",
+  "inlandRelative": "Inland, relative to your direction of travel",
+  "northUp": "Inland, north up",
+  "acknowledge": "Acknowledge — silence 2 min",
+  "silenced": "Siren silenced",
+  "parked": "Parked within 30 m",
+  "wakeLockOff": "Screen may sleep. Keep the app open and the phone mounted.",
+  "errors": {
+    "denied": "Location access is blocked.",
+    "deniedSteps": "Open your browser settings → Site settings → Location, allow this site, then tap Start again.",
+    "unavailable": "Your position is unavailable. Move to open sky and try again.",
+    "unsupported": "This browser cannot provide your location.",
+    "data": "Shoreline data failed to load. Reconnect once to download it."
+  },
+  "nav": {
+    "monitor": "Monitor",
+    "map": "Map"
+  },
+  "map": {
+    "basemap": "Background map (online)",
+    "basemapNote": "Downloads map tiles from OpenFreeMap, which reveals the area you are viewing. Off = fully private and offline.",
+    "follow": "Follow me",
+    "legendShore": "Shoreline",
+    "legendBand": "30 m no-drive band",
+    "legendCorridor": "Regulated area"
+  },
+  "speech": {
+    "DANGER": "Move inland. You are within 30 metres of the shoreline.",
+    "CAUTION": "Caution. You are approaching the shoreline."
+  }
 }

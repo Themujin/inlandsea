@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Copied vendor bundles and the raw brand kit drop.
+    "public/vendor/**",
+    "shoreline-guard-brand/**",
   ]),
 ]);
 

@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Sans_Arabic, Inter } from "next/font/google";
 import { notFound } from "next/navigation";
+import { AlertOverlay } from "@/components/AlertOverlay";
+import { AppNav, LocaleSwitch } from "@/components/AppNav";
+import { BrandLogo } from "@/components/BrandLogo";
+import { MonitorRunner } from "@/components/MonitorRunner";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { LOCALES, dirOf, getDictionary, isLocale } from "@/i18n";
 import "../globals.css";
@@ -55,6 +59,9 @@ export const viewport: Viewport = {
 export default async function LocaleLayout({ children, params }: LayoutProps<"/[locale]">) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
+  const t = getDictionary(locale);
+  const otherLocale = locale === "en" ? "ar" : "en";
+  const other = getDictionary(otherLocale);
   return (
     <html
       lang={locale}
@@ -64,7 +71,16 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
       <body
         className={`flex min-h-dvh flex-col antialiased ${locale === "ar" ? "font-arabic" : "font-sans"}`}
       >
+        <AlertOverlay t={t} other={other} otherLocale={otherLocale} />
+        <header className="mx-auto flex w-full max-w-md items-center justify-between gap-4 px-4 pt-4">
+          <h1>
+            <BrandLogo locale={locale} height={44} />
+          </h1>
+          <LocaleSwitch to={otherLocale} label={t.switchLanguage} />
+        </header>
         {children}
+        <AppNav locale={locale} t={t} />
+        <MonitorRunner locale={locale} t={t} />
         <ServiceWorkerRegister />
       </body>
     </html>

@@ -27,8 +27,17 @@ async function main() {
       swSrc: bundled,
       swDest: path.join(outDir, "sw.js"),
       globDirectory: outDir,
-      globPatterns: ["**/*.{html,txt,js,css,json,geojson,webmanifest,png,ico,svg,woff2}"],
-      globIgnores: ["sw.js", "404.html", "_not-found/**", "brand/png/**", "og-image.png"],
+      globPatterns: ["**/*.{html,txt,js,mjs,css,json,geojson,gpx,webmanifest,png,ico,svg,woff2}"],
+      globIgnores: [
+        "sw.js",
+        "404.html",
+        "_not-found/**",
+        "brand/png/**",
+        "og-image.png",
+        // Turbopack emits MapLibre's worker/dev builds as assets; the app loads
+        // /vendor/maplibre-gl-worker.mjs instead (see MapView setWorkerUrl).
+        "_next/static/media/maplibre-gl*.mjs",
+      ],
       maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
       // Next's hashed assets are immutable; skip revision hashes for them.
       dontCacheBustURLsMatching: /^_next\/static\//,
