@@ -1,8 +1,21 @@
-// Web Audio siren and chime. The context must be created or resumed inside a user
+// Web Audio alert tones. The context must be created or resumed inside a user
 // gesture (the Start tap) or browsers keep it suspended.
+//
+// Sounds are soft sine "bell" notes rather than a siren: urgent through repetition,
+// not harshness, so they are bearable in a car for as long as DANGER lasts.
 
 let ctx: AudioContext | null = null;
-let siren: { osc: OscillatorNode; lfo: OscillatorNode; gain: GainNode } | null = null;
+let alarm: ReturnType<typeof setInterval> | null = null;
+
+/** DANGER: descending two-note chime (B5 → G5), repeated every 1.4 s. */
+const ALARM_NOTES = [988, 784];
+const ALARM_NOTE_GAP_S = 0.24;
+const ALARM_REPEAT_MS = 1400;
+const ALARM_GAIN = 0.22;
+
+/** CAUTION: single rising pair, played once. */
+const CHIME_NOTES = [660, 880];
+const CHIME_GAIN = 0.16;
 
 export function unlockAudio(): void {
   try {
@@ -13,51 +26,50 @@ export function unlockAudio(): void {
   }
 }
 
-export function isSirenOn(): boolean {
-  return siren !== null;
+/** One bell-like note: sine plus a quiet octave, fast attack, smooth decay. */
+function bell(freq: number, at: number, peak: number, decay = 0.6): void {
+  if (!ctx) return;
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.0001, at);
+  gain.gain.exponentialRampToValueAtTime(peak, at + 0.015);
+  gain.gain.exponentialRampToValueAtTime(0.0001, at + decay);
+  gain.connect(ctx.destination);
+  for (const [mult, level] of [
+    [1, 1],
+    [2, 0.25],
+  ]) {
+    const osc = ctx.createOscillator();
+    const partial = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = freq * mult;
+    partial.gain.value = level;
+    osc.connect(partial).connect(gain);
+    osc.start(at);
+    osc.stop(at + decay + 0.05);
+  }
 }
 
-/** Two-tone wailing siren, 600–1200 Hz, until turned off. */
+function playAlarmOnce(): void {
+  if (!ctx) return;
+  const t = ctx.currentTime + 0.02;
+  ALARM_NOTES.forEach((f, i) => bell(f, t + i * ALARM_NOTE_GAP_S, ALARM_GAIN));
+}
+
+/** Repeating DANGER alarm until turned off. */
 export function setSiren(on: boolean): void {
-  if (!ctx || on === (siren !== null)) return;
+  if (!ctx || on === (alarm !== null)) return;
   if (!on) {
-    const s = siren!;
-    siren = null;
-    s.gain.gain.setTargetAtTime(0, ctx.currentTime, 0.05);
-    s.osc.stop(ctx.currentTime + 0.3);
-    s.lfo.stop(ctx.currentTime + 0.3);
+    clearInterval(alarm!);
+    alarm = null;
     return;
   }
-  const osc = ctx.createOscillator();
-  osc.type = "sawtooth";
-  osc.frequency.value = 900;
-  const lfo = ctx.createOscillator();
-  lfo.type = "triangle";
-  lfo.frequency.value = 0.8;
-  const depth = ctx.createGain();
-  depth.gain.value = 300;
-  lfo.connect(depth).connect(osc.frequency);
-  const gain = ctx.createGain();
-  gain.gain.value = 0.25;
-  osc.connect(gain).connect(ctx.destination);
-  osc.start();
-  lfo.start();
-  siren = { osc, lfo, gain };
+  playAlarmOnce();
+  alarm = setInterval(playAlarmOnce, ALARM_REPEAT_MS);
 }
 
-/** Single soft two-note chime for CAUTION. */
+/** Single soft chime for CAUTION. */
 export function chime(): void {
   if (!ctx) return;
-  const t = ctx.currentTime;
-  [880, 1320].forEach((freq, i) => {
-    const osc = ctx!.createOscillator();
-    const gain = ctx!.createGain();
-    osc.frequency.value = freq;
-    gain.gain.setValueAtTime(0.0001, t + i * 0.18);
-    gain.gain.exponentialRampToValueAtTime(0.3, t + i * 0.18 + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.18 + 0.5);
-    osc.connect(gain).connect(ctx!.destination);
-    osc.start(t + i * 0.18);
-    osc.stop(t + i * 0.18 + 0.55);
-  });
+  const t = ctx.currentTime + 0.02;
+  CHIME_NOTES.forEach((f, i) => bell(f, t + i * 0.18, CHIME_GAIN, 0.8));
 }
