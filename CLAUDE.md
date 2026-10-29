@@ -20,3 +20,6 @@ Spec: docs/SPEC.md (source of truth)
   requests reveal the viewed area, and the toggle turns it off. Licence for this use is unconfirmed.
 - Shoreline data: `npm run geo:fetch` (OSM coastline → data/osm/) then `npm run geo:build`
   (→ public/geo + sample GPX). Stretch ends and Khor mouth live in scripts/geo/area.ts.
+- Contours (opt-in, online): AWS Terrain Tiles → maplibre-contour in a worker; labels use
+  MapLibre demotiles glyphs. "Go to" pin is stored in localStorage only; path is a straight
+  line checked against the band by src/engine/route.ts (no routing server: coordinates stay local).

@@ -55,11 +55,23 @@
     "follow": "Follow me",
     "legendShore": "Shoreline",
     "legendBand": "{danger} m warning band ({rule} m + {tide} m tide)",
-    "legendCorridor": "Regulated area"
+    "legendCorridor": "Regulated area",
+    "contours": "Contours (online)",
+    "contoursNote": "Elevation lines from AWS Terrain Tiles (Mapzen). Downloads data for the area you are viewing."
   },
   "speech": {
     "DANGER": "Move inland. You are within {danger} metres of the shoreline.",
     "CAUTION": "Caution. You are approaching the shoreline."
   },
-  "dataCredit": "Shoreline data © OpenStreetMap contributors (ODbL)."
+  "dataCredit": "Shoreline data © OpenStreetMap contributors (ODbL).",
+  "goto": {
+    "hint": "Long-press the map to mark a place to go to.",
+    "title": "Go to",
+    "clear": "Clear",
+    "startForDistance": "Start monitoring to see distance and direction.",
+    "crosses": "The straight path passes within {danger} m of the shoreline. Go around.",
+    "clearPath": "Path stays clear of the shore band.",
+    "bearing": "Direction"
+  },
+  "km": "km"
 }

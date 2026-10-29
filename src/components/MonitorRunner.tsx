@@ -68,8 +68,13 @@ export function MonitorRunner({ locale, t }: { locale: Locale; t: Dictionary }) 
             ? watchGeolocation(onFix, onError)
             : replayGpx(SAMPLE_TRACK, onFix, onError);
         // No new fix for maxFixAgeMs → re-evaluate the last one, which yields NO_FIX.
+        // Except while warning: a stationary phone may simply have stopped reporting, and
+        // dropping DANGER/CAUTION to NO_FIX would silence the alert. Warn early, never late.
         ticker = setInterval(() => {
-          if (last && Date.now() - last.timestamp > data.config.maxFixAgeMs) feed(last);
+          if (!last || Date.now() - last.timestamp <= data.config.maxFixAgeMs) return;
+          const shown = useMonitor.getState().result?.state;
+          if (shown === "DANGER" || shown === "CAUTION") return;
+          feed(last);
         }, STALE_CHECK_MS);
         releaseWakeLock = holdWakeLock((held) => useMonitor.setState({ wakeLock: held }));
       })

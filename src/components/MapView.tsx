@@ -6,23 +6,33 @@ import { useEffect, useRef, useState } from "react";
 import type { Dictionary } from "@/i18n";
 import { BRAND } from "@/lib/brandColors";
 import { loadEngineData } from "@/lib/engineData";
-import { MapStatusCard } from "./MapStatusCard";
+import { checkRoute, type RouteCheck } from "@/engine/route";
+import type { LonLat } from "@/engine/types";
+import { vibrate } from "@/sensors/device";
 import type { SensorFix } from "@/sensors/types";
+import { useDestination } from "@/store/destination";
 import { useMonitor } from "@/store/monitor";
+import { GLYPHS_URL, addContours } from "./contours";
+import { GoToCard } from "./GoToCard";
+import { MapStatusCard } from "./MapStatusCard";
 
 setWorkerUrl("/vendor/maplibre-gl-worker.mjs");
 
 const BASEMAP_KEY = "sg-satellite";
+const CONTOURS_KEY = "sg-contours";
+/** Long-press duration that drops a "go to" pin on touch screens. */
+const LONG_PRESS_MS = 600;
 const GROUND = { id: "ground", type: "background", paint: { "background-color": BRAND.ink } } as const;
 
 /** No tiles at all: fully private and offline, just our own layers on a plain ground. */
-const BLANK_STYLE: StyleSpecification = { version: 8, sources: {}, layers: [GROUND] };
+const BLANK_STYLE: StyleSpecification = { version: 8, glyphs: GLYPHS_URL, sources: {}, layers: [GROUND] };
 
 // Satellite imagery: Esri World Imagery. Its licence terms for this use are unconfirmed;
 // check them before a public launch and swap the source here if needed.
 // Offline, the tiles fail and the plain ground shows through.
 const SATELLITE_STYLE: StyleSpecification = {
   version: 8,
+  glyphs: GLYPHS_URL,
   sources: {
     satellite: {
       type: "raster",
@@ -73,6 +83,28 @@ function userFeatures(fix: SensorFix | null, nearest: [number, number] | null) {
   return { type: "FeatureCollection" as const, features };
 }
 
+const EMPTY_FC = { type: "FeatureCollection" as const, features: [] };
+
+function routeFeatures(from: SensorFix | null, to: LonLat | null, crosses: boolean) {
+  const features: GeoJSON.Feature[] = [];
+  if (to) features.push({ type: "Feature", properties: { kind: "dest" }, geometry: { type: "Point", coordinates: to } });
+  if (from && to)
+    features.push({
+      type: "Feature",
+      properties: { kind: "path", crosses },
+      geometry: { type: "LineString", coordinates: [[from.lon, from.lat], to] },
+    });
+  return { type: "FeatureCollection" as const, features };
+}
+
+function readContours(): boolean {
+  try {
+    return localStorage.getItem(CONTOURS_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
 function readBasemap(): boolean {
   try {
     // On unless the viewer turned it off.
@@ -87,7 +119,10 @@ export default function MapView({ t }: { t: Dictionary }) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MlMap | null>(null);
   const [basemap, setBasemap] = useState(readBasemap);
+  const [contours, setContours] = useState(readContours);
   const [follow, setFollow] = useState(false);
+  const [route, setRoute] = useState<RouteCheck | null>(null);
+  const destination = useDestination((s) => s.destination);
   const followRef = useRef(follow);
   const mode = useMonitor((s) => s.mode);
   const error = useMonitor((s) => s.error);
@@ -125,6 +160,7 @@ export default function MapView({ t }: { t: Dictionary }) {
       map.addSource("corridor", { type: "geojson", data: data.layers.corridor as GeoJSON.FeatureCollection });
       map.addSource("shoreline", { type: "geojson", data: data.layers.shoreline as GeoJSON.FeatureCollection });
       map.addSource("user", { type: "geojson", data: userFeatures(null, null) });
+      map.addSource("route", { type: "geojson", data: EMPTY_FC });
 
       map.addLayer({ id: "corridor-fill", type: "fill", source: "corridor", paint: { "fill-color": BRAND.lagoon, "fill-opacity": 0.12 } });
       map.addLayer({
@@ -158,6 +194,26 @@ export default function MapView({ t }: { t: Dictionary }) {
         source: "shoreline",
         paint: { "line-color": BRAND.sand, "line-width": 2 },
       });
+      map.addLayer({
+        id: "path",
+        type: "line",
+        source: "route",
+        filter: ["==", ["get", "kind"], "path"],
+        layout: { "line-cap": "round" },
+        paint: {
+          "line-color": ["case", ["get", "crosses"], BRAND.alert, BRAND.lagoon],
+          "line-width": 3,
+          "line-dasharray": [2, 1.5],
+        },
+      });
+      map.addLayer({
+        id: "dest",
+        type: "circle",
+        source: "route",
+        filter: ["==", ["get", "kind"], "dest"],
+        paint: { "circle-radius": 9, "circle-color": BRAND.sand, "circle-stroke-color": BRAND.ink, "circle-stroke-width": 3 },
+      });
+      if (contours) addContours(map, "corridor-fill");
       map.addLayer({
         id: "accuracy",
         type: "fill",
@@ -193,18 +249,51 @@ export default function MapView({ t }: { t: Dictionary }) {
       container.current?.querySelector(".maplibregl-ctrl-attrib")?.classList.remove("maplibregl-compact-show");
       map.setMaxBounds([b.minX - 0.3, b.minY - 0.3, b.maxX + 0.3, b.maxY + 0.3]);
 
+      // Straight "go to" path from the current fix, checked against the shore band.
+      const pushRoute = () => {
+        const fix = useMonitor.getState().fix;
+        const dest = useDestination.getState().destination;
+        const check = fix && dest ? checkRoute([fix.lon, fix.lat], dest, data.geometry, data.config) : null;
+        setRoute(check);
+        (map.getSource("route") as GeoJSONSource | undefined)?.setData(
+          routeFeatures(fix, dest, check?.crossesBand ?? false),
+        );
+      };
       const push = () => {
         const { fix, result } = useMonitor.getState();
         (map.getSource("user") as GeoJSONSource | undefined)?.setData(
           userFeatures(fix, result?.nearestPoint ?? null),
         );
+        pushRoute();
         if (fix && followRef.current) map.easeTo({ center: [fix.lon, fix.lat], zoom: Math.max(map.getZoom(), 16) });
       };
       push();
-      const unsubscribe = useMonitor.subscribe((s, prev) => {
+      const offFix = useMonitor.subscribe((s, prev) => {
         if (s.fix !== prev.fix) push();
       });
-      map.once("remove", unsubscribe);
+      const offDest = useDestination.subscribe(pushRoute);
+
+      // Long-press (touch) or right-click (desktop) marks the destination.
+      const mark = (ll: { lng: number; lat: number }) => {
+        useDestination.getState().setDestination([ll.lng, ll.lat]);
+        vibrate(40);
+      };
+      let pressTimer: ReturnType<typeof setTimeout> | undefined;
+      const cancelPress = () => clearTimeout(pressTimer);
+      map.on("touchstart", (e) => {
+        cancelPress();
+        if (e.points.length === 1) pressTimer = setTimeout(() => mark(e.lngLat), LONG_PRESS_MS);
+      });
+      map.on("touchend", cancelPress);
+      map.on("touchmove", cancelPress);
+      map.on("dragstart", cancelPress);
+      map.on("contextmenu", (e) => mark(e.lngLat));
+
+      map.once("remove", () => {
+        offFix();
+        offDest();
+        cancelPress();
+      });
     });
 
     return () => {
@@ -212,7 +301,7 @@ export default function MapView({ t }: { t: Dictionary }) {
       map.remove();
       mapRef.current = null;
     };
-  }, [basemap]);
+  }, [basemap, contours]);
 
   const toggleBasemap = () => {
     const next = !basemap;
@@ -220,6 +309,14 @@ export default function MapView({ t }: { t: Dictionary }) {
       localStorage.setItem(BASEMAP_KEY, next ? "1" : "0");
     } catch {}
     setBasemap(next);
+  };
+
+  const toggleContours = () => {
+    const next = !contours;
+    try {
+      localStorage.setItem(CONTOURS_KEY, next ? "1" : "0");
+    } catch {}
+    setContours(next);
   };
 
   // Starting from the map means driving: follow the car by default.
@@ -238,6 +335,7 @@ export default function MapView({ t }: { t: Dictionary }) {
       {mode && <MapStatusCard t={t} />}
 
       <div className="absolute inset-x-3 bottom-3 flex flex-col gap-2 rounded-card bg-[var(--app-bg)]/90 p-3 text-sm shadow-lg backdrop-blur">
+        {destination && <GoToCard t={t} route={route} monitoring={!!mode} />}
         {/* The map is the home screen, so monitoring can start right here. */}
         {mode ? (
           <button
@@ -277,8 +375,14 @@ export default function MapView({ t }: { t: Dictionary }) {
             <input type="checkbox" checked={basemap} onChange={toggleBasemap} />
             {t.map.basemap}
           </label>
+          <label className="flex items-center gap-2">
+            <input type="checkbox" checked={contours} onChange={toggleContours} />
+            {t.map.contours}
+          </label>
         </div>
+        {!destination && !mode && <p className="text-xs text-muted">{t.goto.hint}</p>}
         {basemap && !mode && <p className="text-xs text-muted">{t.map.basemapNote}</p>}
+        {contours && !mode && <p className="text-xs text-muted">{t.map.contoursNote}</p>}
       </div>
     </div>
   );

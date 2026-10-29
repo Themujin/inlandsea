@@ -51,17 +51,53 @@ export function evaluate(
 
   // 3–4. Candidate segments, then nearest point in a local projection centred on the user.
   const proj = makeProjection(fix.lon, fix.lat);
+  const nearest = nearestShore(p, geometry, config);
+  const best = nearest ? nearest.distanceM ** 2 : Infinity;
+  const [bx, by] = nearest ? proj.toXY(nearest.point) : [0, 0];
+
+  const excluded = geometry.exclusions.length > 0 && inAnyPolygon(p, geometry.exclusions);
+
+  if (best === Infinity) {
+    // No shoreline anywhere near: inside the corridor but far from the water.
+    return { ...EMPTY, state: "SAFE", accuracyM, excluded };
+  }
+
+  const distanceM = nearest!.distanceM;
+  // 5. Accuracy-adjusted distance: assume the worst case within the error radius, and that
+  // the waterline has moved tideMarginMeters landward of the mapped shoreline.
+  const effectiveM =
+    distanceM - Math.min(accuracyM, config.accuracyCapMeters) - config.tideMarginMeters;
+  // 8. Inland bearing: vector from nearest shore point (bx, by) to the user (origin).
+  const bearingInland =
+    distanceM > ON_LINE_M ? ((Math.atan2(-bx, -by) * 180) / Math.PI + 360) % 360 : null;
+
+  return {
+    state: excluded ? "SAFE" : classify(effectiveM, config),
+    distanceM,
+    effectiveM,
+    nearestPoint: nearest!.point,
+    bearingInland,
+    accuracyM,
+    excluded,
+  };
+}
+
+/**
+ * Nearest shoreline point to p (honours includeInnerShore), or null if none within the
+ * widest search box (~10 km). Shared by evaluate() and route checks.
+ */
+export function nearestShore(
+  p: LonLat,
+  geometry: ShoreGeometry,
+  config: EngineConfig,
+): { distanceM: number; point: LonLat } | null {
+  const proj = makeProjection(p[0], p[1]);
   let best = Infinity;
   let bx = 0;
   let by = 0;
   let d = config.searchDegrees;
   for (let step = 0; step < SEARCH_STEPS && best === Infinity; step++, d *= SEARCH_GROWTH) {
-    const candidates = geometry.index.search({
-      minX: fix.lon - d,
-      minY: fix.lat - d,
-      maxX: fix.lon + d,
-      maxY: fix.lat + d,
-    });
+    const candidates = geometry.index.search({ minX: p[0] - d, minY: p[1] - d, maxX: p[0] + d, maxY: p[1] + d });
     for (const s of candidates) {
       if (s.inner && !config.includeInnerShore) continue;
       const [ax, ay] = proj.toXY(s.a);
@@ -75,30 +111,5 @@ export function evaluate(
       }
     }
   }
-
-  const excluded = geometry.exclusions.length > 0 && inAnyPolygon(p, geometry.exclusions);
-
-  if (best === Infinity) {
-    // No shoreline anywhere near: inside the corridor but far from the water.
-    return { ...EMPTY, state: "SAFE", accuracyM, excluded };
-  }
-
-  const distanceM = Math.sqrt(best);
-  // 5. Accuracy-adjusted distance: assume the worst case within the error radius, and that
-  // the waterline has moved tideMarginMeters landward of the mapped shoreline.
-  const effectiveM =
-    distanceM - Math.min(accuracyM, config.accuracyCapMeters) - config.tideMarginMeters;
-  // 8. Inland bearing: vector from nearest shore point (bx, by) to the user (origin).
-  const bearingInland =
-    distanceM > ON_LINE_M ?((Math.atan2(-bx, -by) * 180) / Math.PI + 360) % 360 : null;
-
-  return {
-    state: excluded ? "SAFE" : classify(effectiveM, config),
-    distanceM,
-    effectiveM,
-    nearestPoint: proj.toLonLat(bx, by),
-    bearingInland,
-    accuracyM,
-    excluded,
-  };
+  return best === Infinity ? null : { distanceM: Math.sqrt(best), point: proj.toLonLat(bx, by) };
 }

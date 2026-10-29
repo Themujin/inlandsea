@@ -88,3 +88,66 @@ test("simulated drive reaches DANGER and the map keeps tracking", async ({ page 
   // Monitoring survived the navigation.
   await expect(page.getByTestId("danger-banner")).toBeVisible();
 });
+
+test.describe("go to a marked place", () => {
+  test.use({ permissions: ["geolocation"] });
+
+  test("right-click marks a destination; distance and clear work", async ({ page, context }) => {
+    await context.setGeolocation(inland(500));
+    await page.goto("/en/");
+    await page.getByRole("button", { name: "Start monitoring" }).click();
+    await expect(page.getByTestId("map-status")).toHaveAttribute("data-state", "SAFE");
+
+    const map = page.locator("[data-testid=map] canvas");
+    const box = (await map.boundingBox())!;
+    await page.mouse.click(box.x + box.width * 0.3, box.y + box.height * 0.4, { button: "right" });
+    await expect(page.getByTestId("goto-card")).toBeVisible();
+    await expect(page.getByTestId("goto-distance")).toHaveText(/^\d+(\.\d)? (m|km)$/);
+
+    await page.getByRole("button", { name: "Clear" }).click();
+    await expect(page.getByTestId("goto-card")).toHaveCount(0);
+  });
+
+  test("warns when the straight path passes inside the shore band", async ({ page, context }) => {
+    await context.setGeolocation(inland(500));
+    // Destination 15 m from the water, 200 m further north.
+    const dest = inland(15);
+    await page.addInitScript(
+      ([lon, lat]) => localStorage.setItem("sg-destination", JSON.stringify([lon, lat])),
+      [dest.longitude, dest.latitude + 200 / 111_195],
+    );
+    await page.goto("/en/");
+    await expect(page.getByTestId("goto-card")).toContainText("Start monitoring to see distance");
+    await page.getByRole("button", { name: "Start monitoring" }).click();
+    await expect(page.getByTestId("goto-card").getByRole("alert")).toContainText("within 40 m of the shoreline");
+  });
+});
+
+test.describe("stationary phone", () => {
+  test.use({ permissions: ["geolocation"] });
+
+  test("parked inside the band stays DANGER (no stale fall-back to NO_FIX)", async ({ page, context }) => {
+    test.setTimeout(40_000);
+    await context.setGeolocation(inland(10));
+    await page.goto("/en/");
+    await page.getByRole("button", { name: "Start monitoring" }).click();
+    await page.getByTestId("danger-overlay").getByRole("button", { name: /Acknowledge/ }).click();
+    // Longer than maxFixAgeMs (10 s) with no movement at all.
+    await page.waitForTimeout(14_000);
+    await expect(page.getByTestId("map-status")).toHaveAttribute("data-state", "DANGER");
+  });
+});
+
+test.describe("stationary phone, far from the water", () => {
+  test.use({ permissions: ["geolocation"] });
+
+  test("a stale SAFE still falls back to NO_FIX", async ({ page, context }) => {
+    test.setTimeout(40_000);
+    await context.setGeolocation(inland(500));
+    await page.goto("/en/");
+    await page.getByRole("button", { name: "Start monitoring" }).click();
+    await expect(page.getByTestId("map-status")).toHaveAttribute("data-state", "SAFE");
+    await page.waitForTimeout(14_000);
+    await expect(page.getByTestId("map-status")).toHaveAttribute("data-state", "NO_FIX");
+  });
+});
