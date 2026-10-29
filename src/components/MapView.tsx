@@ -12,27 +12,24 @@ import { vibrate } from "@/sensors/device";
 import type { SensorFix } from "@/sensors/types";
 import { useDestination } from "@/store/destination";
 import { useMonitor } from "@/store/monitor";
-import { GLYPHS_URL, addContours } from "./contours";
 import { GoToCard } from "./GoToCard";
 import { MapStatusCard } from "./MapStatusCard";
 
 setWorkerUrl("/vendor/maplibre-gl-worker.mjs");
 
 const BASEMAP_KEY = "sg-satellite";
-const CONTOURS_KEY = "sg-contours";
 /** Long-press duration that drops a "go to" pin on touch screens. */
 const LONG_PRESS_MS = 600;
 const GROUND = { id: "ground", type: "background", paint: { "background-color": BRAND.ink } } as const;
 
 /** No tiles at all: fully private and offline, just our own layers on a plain ground. */
-const BLANK_STYLE: StyleSpecification = { version: 8, glyphs: GLYPHS_URL, sources: {}, layers: [GROUND] };
+const BLANK_STYLE: StyleSpecification = { version: 8, sources: {}, layers: [GROUND] };
 
 // Satellite imagery: Esri World Imagery. Its licence terms for this use are unconfirmed;
 // check them before a public launch and swap the source here if needed.
 // Offline, the tiles fail and the plain ground shows through.
 const SATELLITE_STYLE: StyleSpecification = {
   version: 8,
-  glyphs: GLYPHS_URL,
   sources: {
     satellite: {
       type: "raster",
@@ -97,14 +94,6 @@ function routeFeatures(from: SensorFix | null, to: LonLat | null, crosses: boole
   return { type: "FeatureCollection" as const, features };
 }
 
-function readContours(): boolean {
-  try {
-    return localStorage.getItem(CONTOURS_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-
 function readBasemap(): boolean {
   try {
     // On unless the viewer turned it off.
@@ -119,8 +108,8 @@ export default function MapView({ t }: { t: Dictionary }) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MlMap | null>(null);
   const [basemap, setBasemap] = useState(readBasemap);
-  const [contours, setContours] = useState(readContours);
   const [follow, setFollow] = useState(false);
+  const [layersOpen, setLayersOpen] = useState(false);
   const [route, setRoute] = useState<RouteCheck | null>(null);
   const destination = useDestination((s) => s.destination);
   const followRef = useRef(follow);
@@ -213,7 +202,6 @@ export default function MapView({ t }: { t: Dictionary }) {
         filter: ["==", ["get", "kind"], "dest"],
         paint: { "circle-radius": 9, "circle-color": BRAND.sand, "circle-stroke-color": BRAND.ink, "circle-stroke-width": 3 },
       });
-      if (contours) addContours(map, "corridor-fill");
       map.addLayer({
         id: "accuracy",
         type: "fill",
@@ -301,7 +289,7 @@ export default function MapView({ t }: { t: Dictionary }) {
       map.remove();
       mapRef.current = null;
     };
-  }, [basemap, contours]);
+  }, [basemap]);
 
   const toggleBasemap = () => {
     const next = !basemap;
@@ -309,14 +297,6 @@ export default function MapView({ t }: { t: Dictionary }) {
       localStorage.setItem(BASEMAP_KEY, next ? "1" : "0");
     } catch {}
     setBasemap(next);
-  };
-
-  const toggleContours = () => {
-    const next = !contours;
-    try {
-      localStorage.setItem(CONTOURS_KEY, next ? "1" : "0");
-    } catch {}
-    setContours(next);
   };
 
   // Starting from the map means driving: follow the car by default.
@@ -334,57 +314,103 @@ export default function MapView({ t }: { t: Dictionary }) {
 
       {mode && <MapStatusCard t={t} />}
 
-      <div className="absolute inset-x-3 bottom-3 flex flex-col gap-2 rounded-card bg-[var(--app-bg)]/90 p-3 text-sm shadow-lg backdrop-blur">
-        {destination && <GoToCard t={t} route={route} monitoring={!!mode} />}
-        {/* The map is the home screen, so monitoring can start right here. */}
-        {mode ? (
-          <button
-            type="button"
-            onClick={stop}
-            className="rounded-button border border-line px-5 py-2 text-base font-semibold"
+      <div className="absolute inset-x-3 bottom-3 flex flex-col gap-2">
+        {layersOpen && (
+          <div
+            id="map-layers"
+            className="flex flex-col gap-2 rounded-card bg-[var(--app-bg)]/95 p-3 text-sm shadow-lg backdrop-blur"
           >
-            {t.stop}
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={startDriving}
-            className="rounded-button bg-sea px-5 py-3 text-lg font-bold text-foam shadow dark:bg-lagoon dark:text-ink"
-          >
-            {t.start}
-          </button>
-        )}
-        {error && !mode && <p className="font-semibold text-state-danger-strong">{t.errors[error]}</p>}
-        {/* While driving, keep the panel small: the map and status card matter most. */}
-        {!mode && (
-          <div className="flex flex-wrap gap-x-4 gap-y-1">
-            <Legend swatch={<span className="h-1 w-5 rounded bg-sand" />} label={t.map.legendShore} />
-            <Legend swatch={<span className="h-3 w-5 rounded bg-alert/40" />} label={t.map.legendBand} />
-            <Legend
-              swatch={<span className="h-3 w-5 rounded border border-dashed border-lagoon bg-lagoon/15" />}
-              label={t.map.legendCorridor}
-            />
+            <div className="flex flex-wrap gap-x-4 gap-y-1">
+              <Legend swatch={<span className="h-1 w-5 rounded bg-sand" />} label={t.map.legendShore} />
+              <Legend swatch={<span className="h-3 w-5 rounded bg-alert/40" />} label={t.map.legendBand} />
+              <Legend
+                swatch={<span className="h-3 w-5 rounded border border-dashed border-lagoon bg-lagoon/15" />}
+                label={t.map.legendCorridor}
+              />
+            </div>
+            <label className="flex items-center gap-2">
+              <input type="checkbox" checked={basemap} onChange={toggleBasemap} />
+              {t.map.basemap}
+            </label>
+            {basemap && <p className="text-xs text-muted">{t.map.basemapNote}</p>}
+            <p className="text-xs text-muted">{t.goto.hint}</p>
           </div>
         )}
-        <div className="flex flex-wrap items-center gap-4">
-          <label className="flex items-center gap-2">
-            <input type="checkbox" checked={follow} onChange={(e) => setFollow(e.target.checked)} />
-            {t.map.follow}
-          </label>
-          <label className="flex items-center gap-2">
-            <input type="checkbox" checked={basemap} onChange={toggleBasemap} />
-            {t.map.basemap}
-          </label>
-          <label className="flex items-center gap-2">
-            <input type="checkbox" checked={contours} onChange={toggleContours} />
-            {t.map.contours}
-          </label>
+
+        {destination && <GoToCard t={t} route={route} monitoring={!!mode} />}
+        {error && !mode && (
+          <p className="rounded-card bg-[var(--app-bg)]/95 px-3 py-2 text-sm font-semibold text-state-danger-strong shadow-lg">
+            {t.errors[error]}
+          </p>
+        )}
+
+        {/* One slim bar: the map is the home screen, so monitoring starts right here. */}
+        <div className="flex items-center gap-2">
+          {mode ? (
+            <button
+              type="button"
+              onClick={stop}
+              className="h-12 flex-1 rounded-button bg-[var(--app-bg)]/95 px-5 font-semibold shadow-lg backdrop-blur"
+            >
+              {t.stop}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={startDriving}
+              className="h-12 flex-1 rounded-button bg-sea px-5 text-lg font-bold text-foam shadow-lg dark:bg-lagoon dark:text-ink"
+            >
+              {t.start}
+            </button>
+          )}
+          <RoundButton label={t.map.follow} pressed={follow} onClick={() => setFollow(!follow)}>
+            {/* Crosshair */}
+            <circle cx="12" cy="12" r="4" fill="currentColor" />
+            <path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            <circle cx="12" cy="12" r="7.5" fill="none" stroke="currentColor" strokeWidth="2" />
+          </RoundButton>
+          <RoundButton
+            label={t.map.layers}
+            pressed={layersOpen}
+            controls="map-layers"
+            onClick={() => setLayersOpen(!layersOpen)}
+          >
+            {/* Stacked layers */}
+            <path d="M12 3 2 8l10 5 10-5-10-5Z" fill="currentColor" />
+            <path d="m2 12 10 5 10-5M2 16l10 5 10-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+          </RoundButton>
         </div>
-        {!destination && !mode && <p className="text-xs text-muted">{t.goto.hint}</p>}
-        {basemap && !mode && <p className="text-xs text-muted">{t.map.basemapNote}</p>}
-        {contours && !mode && <p className="text-xs text-muted">{t.map.contoursNote}</p>}
       </div>
     </div>
+  );
+}
+
+interface RoundButtonProps {
+  label: string;
+  pressed: boolean;
+  controls?: string;
+  onClick: () => void;
+  children: React.ReactNode;
+}
+
+/** 48 px round map control with an icon; the label is for screen readers and tooltips. */
+function RoundButton({ label, pressed, controls, onClick, children }: RoundButtonProps) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      aria-pressed={pressed}
+      aria-controls={controls}
+      onClick={onClick}
+      className={`grid size-12 shrink-0 place-items-center rounded-full shadow-lg backdrop-blur ${
+        pressed ? "bg-lagoon text-ink" : "bg-[var(--app-bg)]/95 text-fg"
+      }`}
+    >
+      <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+        {children}
+      </svg>
+    </button>
   );
 }
 

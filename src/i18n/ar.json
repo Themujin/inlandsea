@@ -56,8 +56,7 @@
     "legendShore": "خط الشاطئ",
     "legendBand": "نطاق تحذير {danger} مترًا ({rule} مترًا + {tide} أمتار للمد)",
     "legendCorridor": "المنطقة المنظمة",
-    "contours": "خطوط الكنتور (عبر الإنترنت)",
-    "contoursNote": "خطوط الارتفاع من AWS Terrain Tiles (Mapzen). يتم تنزيل بيانات المنطقة التي تشاهدها."
+    "layers": "طبقات الخريطة"
   },
   "speech": {
     "DANGER": "ابتعد عن الشاطئ. أنت على بعد أقل من {danger} مترًا من خط الشاطئ.",

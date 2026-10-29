@@ -41,7 +41,7 @@ test.describe("live GPS (mocked)", () => {
     await expect(page.getByRole("button", { name: "Start monitoring" })).toBeVisible();
   });
 
-  test("monitoring from the map: status card, follow on, legend hidden", async ({ page, context }) => {
+  test("monitoring from the map: status card, follow on, slim controls", async ({ page, context }) => {
     await context.setGeolocation(inland(500));
     await page.goto("/en/");
     await page.getByRole("button", { name: "Start monitoring" }).click();
@@ -49,12 +49,15 @@ test.describe("live GPS (mocked)", () => {
     await expect(card).toHaveAttribute("data-state", "SAFE");
     await expect(page.getByTestId("map-distance")).toHaveText(/^4\d\d m$/);
     await expect(card.getByTestId("inland-arrow")).toBeVisible();
-    await expect(page.getByLabel("Follow me")).toBeChecked();
+    await expect(page.getByRole("button", { name: "Follow me" })).toHaveAttribute("aria-pressed", "true");
     await expect(page.getByText("Regulated area")).toHaveCount(0);
 
     await page.getByRole("button", { name: "Stop" }).click();
     await expect(card).toHaveCount(0);
+    // Legend and satellite switch live in the Layers sheet.
+    await page.getByRole("button", { name: "Map layers" }).click();
     await expect(page.getByText("Regulated area")).toBeVisible();
+    await expect(page.getByLabel("Satellite (online)")).toBeChecked();
   });
 
   test("Doha: OUT_OF_AREA", async ({ page, context }) => {

@@ -56,8 +56,7 @@
     "legendShore": "Shoreline",
     "legendBand": "{danger} m warning band ({rule} m + {tide} m tide)",
     "legendCorridor": "Regulated area",
-    "contours": "Contours (online)",
-    "contoursNote": "Elevation lines from AWS Terrain Tiles (Mapzen). Downloads data for the area you are viewing."
+    "layers": "Map layers"
   },
   "speech": {
     "DANGER": "Move inland. You are within {danger} metres of the shoreline.",

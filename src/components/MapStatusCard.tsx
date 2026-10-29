@@ -27,41 +27,39 @@ export function MapStatusCard({ t }: { t: Dictionary }) {
   const accuracy = formatAccuracy(fix?.accuracy ?? null, t);
 
   return (
-    // Clears the top-left (i) credit button.
-    <div className="absolute inset-x-3 top-3 ms-12 flex justify-center">
+    // One compact row, clear of the top-left (i) credit button.
+    <div className="absolute inset-x-3 top-3 ms-12">
       <div
         data-testid="map-status"
         data-state={state}
         aria-live="polite"
-        className={`flex w-full max-w-sm items-center gap-3 rounded-card px-4 py-3 shadow-lg ${CARD[state]}`}
+        className={`flex items-center gap-3 rounded-card px-3 py-2 shadow-lg ${CARD[state]}`}
       >
-        <div className="min-w-0 flex-1">
-          <p className="flex items-center gap-2 text-lg font-extrabold leading-tight">
-            {status === "starting" ? t.starting : t.states[state]}
-            {mode === "sim" && (
-              <span className="rounded-button bg-black/25 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide">
-                {t.simulation}
-              </span>
-            )}
-          </p>
-          {near ? (
-            <p className="text-4xl font-extrabold leading-none tabular-nums" data-testid="map-distance">
-              {formatDistance(result?.distanceM ?? null, t)}
-            </p>
-          ) : (
-            <p className="text-sm opacity-90">{t.stateHints[state]}</p>
-          )}
-          {accuracy && <p className="mt-1 text-xs tabular-nums opacity-90">{accuracy}</p>}
-        </div>
         {near && (
           <InlandArrow
             bearing={result?.bearingInland ?? null}
             heading={fix?.heading ?? null}
             speed={fix?.speed ?? null}
             t={t}
-            size={64}
+            size={40}
             compact
           />
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="flex items-center gap-2 truncate text-sm font-bold leading-tight">
+            {status === "starting" ? t.starting : t.states[state]}
+            {mode === "sim" && (
+              <span className="rounded-button bg-black/25 px-1.5 text-[10px] uppercase tracking-wide">
+                {t.simulation}
+              </span>
+            )}
+          </p>
+          {accuracy && <p className="text-xs tabular-nums opacity-90">{accuracy}</p>}
+        </div>
+        {near && (
+          <p className="text-3xl font-extrabold leading-none tabular-nums" data-testid="map-distance">
+            {formatDistance(result?.distanceM ?? null, t)}
+          </p>
         )}
       </div>
     </div>

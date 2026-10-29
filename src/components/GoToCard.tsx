@@ -25,7 +25,7 @@ export function GoToCard({ t, route, monitoring }: Props) {
   const rotation = route ? (relative ? route.bearing - fix!.heading! : route.bearing) : 0;
 
   return (
-    <div data-testid="goto-card" className="flex items-center gap-3 rounded-card border border-line p-2">
+    <div data-testid="goto-card" className="flex items-center gap-3 rounded-card bg-[var(--app-bg)]/95 p-2 shadow-lg backdrop-blur">
       {route && (
         <svg
           width={40}
