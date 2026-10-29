@@ -50,8 +50,8 @@
     "map": "Map"
   },
   "map": {
-    "basemap": "Background map (online)",
-    "basemapNote": "Downloads map tiles from OpenFreeMap, which reveals the area you are viewing. Off = fully private and offline.",
+    "basemap": "Satellite (online)",
+    "basemapNote": "Downloads satellite images of the area you are viewing. Turn off to stay fully private and offline.",
     "follow": "Follow me",
     "legendShore": "Shoreline",
     "legendBand": "30 m no-drive band",

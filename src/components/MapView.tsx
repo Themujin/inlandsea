@@ -1,6 +1,6 @@
 "use client";
 
-import { GeoJSONSource, Map as MlMap, setWorkerUrl, type StyleSpecification } from "maplibre-gl";
+import { AttributionControl, GeoJSONSource, Map as MlMap, setWorkerUrl, type StyleSpecification } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useRef, useState } from "react";
 import type { Dictionary } from "@/i18n";
@@ -12,13 +12,27 @@ import { useMonitor } from "@/store/monitor";
 
 setWorkerUrl("/vendor/maplibre-gl-worker.mjs");
 
-const BASEMAP_STYLE = "https://tiles.openfreemap.org/styles/liberty";
-const BASEMAP_KEY = "sg-basemap";
-/** Offline, private default: no tiles at all, just our own layers on a plain ground. */
-const BLANK_STYLE: StyleSpecification = {
+const BASEMAP_KEY = "sg-satellite";
+const GROUND = { id: "ground", type: "background", paint: { "background-color": BRAND.ink } } as const;
+
+/** No tiles at all: fully private and offline, just our own layers on a plain ground. */
+const BLANK_STYLE: StyleSpecification = { version: 8, sources: {}, layers: [GROUND] };
+
+// Satellite imagery: Esri World Imagery. Its licence terms for this use are unconfirmed;
+// check them before a public launch and swap the source here if needed.
+// Offline, the tiles fail and the plain ground shows through.
+const SATELLITE_STYLE: StyleSpecification = {
   version: 8,
-  sources: {},
-  layers: [{ id: "ground", type: "background", paint: { "background-color": BRAND.ink } }],
+  sources: {
+    satellite: {
+      type: "raster",
+      tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
+      tileSize: 256,
+      maxzoom: 19,
+      attribution: "Imagery © Esri, Maxar, Earthstar Geographics",
+    },
+  },
+  layers: [GROUND, { id: "satellite", type: "raster", source: "satellite" }],
 };
 
 const BAND_M = 30;
@@ -61,9 +75,10 @@ function userFeatures(fix: SensorFix | null, nearest: [number, number] | null) {
 
 function readBasemap(): boolean {
   try {
-    return localStorage.getItem(BASEMAP_KEY) === "1";
+    // On unless the viewer turned it off.
+    return localStorage.getItem(BASEMAP_KEY) !== "0";
   } catch {
-    return false;
+    return true;
   }
 }
 
@@ -86,11 +101,13 @@ export default function MapView({ t }: { t: Dictionary }) {
     let cancelled = false;
     const map = new MlMap({
       container: container.current,
-      style: basemap ? BASEMAP_STYLE : BLANK_STYLE,
+      style: basemap ? SATELLITE_STYLE : BLANK_STYLE,
       center: [51.47, 24.77],
       zoom: 9,
-      attributionControl: basemap ? { compact: true } : false,
+      attributionControl: false,
     });
+    // Top-left so the imagery credit never sits under the legend panel.
+    if (basemap) map.addControl(new AttributionControl({ compact: true }), "top-left");
     mapRef.current = map;
     Promise.all([loadEngineData(), map.once("load")]).then(([data]) => {
       if (cancelled) return;
@@ -113,6 +130,13 @@ export default function MapView({ t }: { t: Dictionary }) {
         source: "shoreline",
         layout: { "line-cap": "round", "line-join": "round" },
         paint: { "line-color": BRAND.alert, "line-opacity": 0.35, "line-width": metresToPixels(2 * BAND_M, lat) },
+      });
+      // Dark casing keeps the sand-coloured line readable over bright desert imagery.
+      map.addLayer({
+        id: "shoreline-casing",
+        type: "line",
+        source: "shoreline",
+        paint: { "line-color": BRAND.ink, "line-width": 4, "line-opacity": 0.6 },
       });
       map.addLayer({
         id: "shoreline",

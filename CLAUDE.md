@@ -15,4 +15,5 @@ Spec: docs/SPEC.md (source of truth)
 - Brand: docs/BRAND.md. Colours/type come from app/brand.css tokens (bg-sea, bg-state-danger-strong, ...);
   never hard-code hex in components. White text only on -strong state shades.
 - Map: MapLibre worker is served from public/vendor (copied by scripts/copy-vendor.ts on
-  predev/prebuild). Online basemap is opt-in only: tile requests reveal the viewed area.
+  predev/prebuild). Satellite (Esri World Imagery) is on by default at the owner's request; tile
+  requests reveal the viewed area, and the toggle turns it off. Licence for this use is unconfirmed.
