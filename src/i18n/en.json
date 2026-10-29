@@ -1,0 +1,25 @@
+{
+  "appName": "Shoreline Guard",
+  "tagline": "Keep 30 m from the shoreline — Sealine to Khor Al Adaid",
+  "rule": "Since 23 October 2026, vehicles must stay at least 30 m from the shoreline between Sealine and Khor Al Adaid. Penalty: imprisonment and/or a fine up to QR 100,000.",
+  "states": {
+    "DANGER": "Move inland",
+    "CAUTION": "Caution",
+    "SAFE": "Safe",
+    "OUT_OF_AREA": "Outside regulated area",
+    "NO_FIX": "Waiting for GPS"
+  },
+  "stateHints": {
+    "DANGER": "Less than 30 m from the shoreline",
+    "CAUTION": "30–60 m from the shoreline",
+    "SAFE": "More than 60 m from the shoreline",
+    "OUT_OF_AREA": "Not on the Sealine – Khor Al Adaid coast",
+    "NO_FIX": "No position, or accuracy worse than 50 m"
+  },
+  "monitorComingSoon": "Live monitoring is coming in the next build (M3).",
+  "geometryWarning": "Placeholder shoreline data — not for real use.",
+  "switchLanguage": "العربية",
+  "disclaimerTitle": "Disclaimer",
+  "disclaimer": "Shoreline Guard is an unofficial safety aid. Distances are estimates based on your phone's GPS and mapped shoreline data, which may be inaccurate. Always follow signs, ranger and Lekhwiya instructions. You remain responsible for complying with the law.",
+  "privacy": "Your location never leaves this device."
+}

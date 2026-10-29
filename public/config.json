@@ -1,0 +1,15 @@
+{
+  "dangerMeters": 30,
+  "cautionMeters": 60,
+  "exitMarginMeters": 5,
+  "maxAccuracyMeters": 50,
+  "accuracyCapMeters": 25,
+  "maxFixAgeMs": 10000,
+  "enterFixes": 2,
+  "exitFixes": 3,
+  "maxSpeedMps": 60,
+  "parkedSpeedMps": 1.5,
+  "parkedAfterMs": 60000,
+  "searchDegrees": 0.01,
+  "includeInnerShore": true
+}
