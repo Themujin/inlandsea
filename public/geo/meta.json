@@ -7,8 +7,8 @@
     "Simplified 2 m, split ≤ 200 m. Not an official survey."
   ],
   "sha256": {
-    "shoreline.geojson": "89e178be27392fa8b53ecf6745d895ffdded9268bf3ff0068a1d138b71bc5ec6",
-    "corridor.geojson": "27fe4ddd2c3ff1f1d61f2b2ba5dbb94d5cf5b78d6ce17d56b56facf2da05d211",
+    "shoreline.geojson": "3cc5d5d3d41cba066cfee5526126d22c34514fc05371c63e253a043bf3337d8c",
+    "corridor.geojson": "da2583cda3b42a7ddb54c71740a2c2e4bf862dcb539044a699ea498d50f72742",
     "exclusions.geojson": "ed778c73ea51338d6576fb5992b189f2b94d9f3d5e199f46c1af520d6b0b3e6c"
   }
 }

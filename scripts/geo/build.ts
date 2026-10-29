@@ -149,7 +149,7 @@ async function main() {
       },
       {
         type: "Feature",
-        properties: { name: "Khor Al Adaid channel shore (Qatar side)", inner: true },
+        properties: { name: "Khor Al Adaid channel and lagoon shore (Qatar side)", inner: true },
         geometry: { type: "LineString", coordinates: inner },
       },
     ]),

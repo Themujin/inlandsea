@@ -5,8 +5,8 @@ export const BBOX = { minLat: 24.5, minLon: 51.2, maxLat: 25.0, maxLon: 51.7 };
 
 /** North end: Sealine / south of Mesaieed. */
 export const NORTH_END: [number, number] = [51.578, 24.934];
-/** South end: inside the Khor Al Adaid channel, Qatar-side bank. */
-export const SOUTH_END: [number, number] = [51.3562, 24.5737];
+/** South end: through the channel into Khor Al Adaid, up the lagoon's east shore. */
+export const SOUTH_END: [number, number] = [51.3305, 24.5924];
 /** Where the channel meets the open sea. Shore south-west of here is flagged inner: true. */
 export const KHOR_MOUTH: [number, number] = [51.4187, 24.6398];
 
