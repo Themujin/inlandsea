@@ -52,3 +52,17 @@ test("service worker takes control and serves the shell offline", async ({ page,
   expect(geo).toBe(true);
   await context.setOffline(false);
 });
+
+test.describe("short screen", () => {
+  test.use({ viewport: { width: 360, height: 600 } });
+
+  test("map controls stay above the bottom nav, even with a go-to card", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("sg-destination", JSON.stringify([51.49, 24.82])));
+    await page.goto("/en/");
+    await expect(page.getByTestId("goto-card")).toBeVisible();
+    const start = (await page.getByRole("button", { name: "Start monitoring" }).boundingBox())!;
+    const nav = (await page.getByRole("navigation").boundingBox())!;
+    expect(start.y + start.height).toBeLessThanOrEqual(nav.y);
+    expect(nav.y + nav.height).toBeLessThanOrEqual(600);
+  });
+});

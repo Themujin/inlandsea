@@ -7,7 +7,7 @@ export default async function MapPage({ params }: PageProps<"/[locale]">) {
   if (!isLocale(locale)) notFound();
   const t = getDictionary(locale);
   return (
-    <main className="mx-auto mt-4 flex min-h-[70dvh] w-full max-w-3xl flex-1 flex-col">
+    <main className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col pt-3">
       <MapScreen t={t} />
     </main>
   );

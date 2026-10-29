@@ -69,16 +69,17 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
       className={`${inter.variable} ${plexArabic.variable}`}
     >
       <body
-        className={`flex min-h-dvh flex-col antialiased ${locale === "ar" ? "font-arabic" : "font-sans"}`}
+        className={`flex h-dvh flex-col overflow-hidden antialiased ${locale === "ar" ? "font-arabic" : "font-sans"}`}
       >
         <AlertOverlay t={t} other={other} otherLocale={otherLocale} />
-        <header className="mx-auto flex w-full max-w-md items-center justify-between gap-4 px-4 pt-4">
+        <header className="mx-auto flex w-full max-w-md shrink-0 items-center justify-between gap-4 px-4 pt-4">
           <h1>
             <BrandLogo locale={locale} height={44} />
           </h1>
           <LocaleSwitch to={otherLocale} label={t.switchLanguage} />
         </header>
-        {children}
+        {/* App shell: header and nav stay put; only this area scrolls (Monitor) or fills (Map). */}
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">{children}</div>
         <AppNav locale={locale} t={t} />
         <MonitorRunner locale={locale} t={t} />
         <ServiceWorkerRegister />

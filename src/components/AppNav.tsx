@@ -13,7 +13,7 @@ export function AppNav({ locale, t }: { locale: Locale; t: Dictionary }) {
     { href: `/${locale}/monitor/`, label: t.nav.monitor, active: onMonitor },
   ];
   return (
-    <nav className="sticky bottom-0 z-30 border-t border-line bg-[var(--app-bg)]">
+    <nav className="shrink-0 border-t border-line bg-[var(--app-bg)]">
       <ul className="mx-auto flex max-w-md">
         {tabs.map((tab) => (
           <li key={tab.href} className="flex-1">
