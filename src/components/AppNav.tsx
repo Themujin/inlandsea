@@ -4,12 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { Dictionary, Locale } from "@/i18n";
 
-/** Bottom tab bar: Monitor / Map. Client-side navigation keeps monitoring running. */
+/** Bottom tab bar: Map (home) / Monitor. Client-side navigation keeps monitoring running. */
 export function AppNav({ locale, t }: { locale: Locale; t: Dictionary }) {
   const pathname = usePathname();
+  const onMonitor = pathname.includes("/monitor");
   const tabs = [
-    { href: `/${locale}/`, label: t.nav.monitor, active: !pathname.includes("/map") },
-    { href: `/${locale}/map/`, label: t.nav.map, active: pathname.includes("/map") },
+    { href: `/${locale}/`, label: t.nav.map, active: !onMonitor },
+    { href: `/${locale}/monitor/`, label: t.nav.monitor, active: onMonitor },
   ];
   return (
     <nav className="sticky bottom-0 z-30 border-t border-line bg-[var(--app-bg)]">

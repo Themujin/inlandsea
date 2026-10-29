@@ -1,12 +1,19 @@
 import { expect, test } from "@playwright/test";
 
+test("map is the home screen", async ({ page }) => {
+  await page.goto("/en/");
+  await expect(page.locator("[data-testid=map] canvas")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Map" })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("button", { name: "Start monitoring" })).toBeVisible();
+});
+
 test("root redirects to a locale", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveURL(/\/(en|ar)\/$/);
 });
 
 test("English monitor page renders LTR", async ({ page }) => {
-  await page.goto("/en/");
+  await page.goto("/en/monitor/");
   await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
   await expect(page.getByRole("heading", { name: "Shoreline Guard" })).toBeVisible();
   await expect(page.getByText(/unofficial safety aid/)).toBeVisible();

@@ -10,7 +10,7 @@ test.describe("live GPS (mocked)", () => {
 
   test("10 m from the water: red overlay, siren, then acknowledge", async ({ page, context }) => {
     await context.setGeolocation(inland(10));
-    await page.goto("/en/");
+    await page.goto("/en/monitor/");
     await page.getByRole("button", { name: "Start monitoring" }).click();
 
     const overlay = page.getByTestId("danger-overlay");
@@ -28,7 +28,7 @@ test.describe("live GPS (mocked)", () => {
 
   test("500 m inland: SAFE with distance and inland arrow", async ({ page, context }) => {
     await context.setGeolocation(inland(500));
-    await page.goto("/en/");
+    await page.goto("/en/monitor/");
     await page.getByRole("button", { name: "Start monitoring" }).click();
     const panel = page.getByTestId("status-panel");
     await expect(panel).toHaveAttribute("data-state", "SAFE");
@@ -43,7 +43,7 @@ test.describe("live GPS (mocked)", () => {
 
   test("Doha: OUT_OF_AREA", async ({ page, context }) => {
     await context.setGeolocation({ latitude: 25.29, longitude: 51.53, accuracy: 5 });
-    await page.goto("/ar/");
+    await page.goto("/ar/monitor/");
     await page.getByRole("button", { name: "ابدأ المراقبة" }).click();
     await expect(page.getByTestId("status-panel")).toHaveAttribute("data-state", "OUT_OF_AREA");
   });
@@ -51,7 +51,7 @@ test.describe("live GPS (mocked)", () => {
 
 test("simulated drive reaches DANGER and the map keeps tracking", async ({ page }) => {
   await page.clock.install();
-  await page.goto("/en/");
+  await page.goto("/en/monitor/");
   await page.getByRole("button", { name: "Simulate a drive" }).click();
   const panel = page.getByTestId("status-panel");
   await expect(panel).toHaveAttribute("data-state", "SAFE");
@@ -67,7 +67,7 @@ test("simulated drive reaches DANGER and the map keeps tracking", async ({ page 
 
   await page.getByTestId("danger-overlay").getByRole("button", { name: /Acknowledge/ }).click();
   await page.getByRole("link", { name: "Map" }).click();
-  await expect(page).toHaveURL(/\/en\/map\/$/);
+  await expect(page).toHaveURL(/\/en\/$/);
   await expect(page.locator("[data-testid=map] canvas")).toBeVisible();
   // Monitoring survived the navigation.
   await expect(page.getByTestId("danger-banner")).toBeVisible();

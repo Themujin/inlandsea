@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import type { ZoneState } from "@/engine/types";
 import type { Dictionary } from "@/i18n";
 import { formatAccuracy, formatDistance } from "@/lib/format";
@@ -26,15 +25,6 @@ export function MonitorScreen({ t }: { t: Dictionary }) {
   const wakeLock = useMonitor((s) => s.wakeLock);
   const start = useMonitor((s) => s.start);
   const stop = useMonitor((s) => s.stop);
-
-  // Manifest shortcut "Start monitoring" opens /<locale>/?start=1.
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("start") === "1" && useMonitor.getState().mode === null) {
-      useMonitor.getState().start("gps");
-      window.history.replaceState(null, "", window.location.pathname);
-    }
-  }, []);
 
   if (!mode) {
     return (

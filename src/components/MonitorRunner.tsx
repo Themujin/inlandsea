@@ -25,6 +25,15 @@ export function MonitorRunner({ locale, t }: { locale: Locale; t: Dictionary }) 
   const ackUntil = useMonitor((s) => s.ackUntil);
   const [rearm, setRearm] = useState(0);
 
+  // Manifest shortcut "Start monitoring" opens /<locale>/?start=1, on whichever screen.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("start") === "1" && useMonitor.getState().mode === null) {
+      useMonitor.getState().start("gps");
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  }, []);
+
   // Sensor pipeline: fix → evaluate → hysteresis → store.
   useEffect(() => {
     if (!mode) return;

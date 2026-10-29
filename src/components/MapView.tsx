@@ -90,6 +90,9 @@ export default function MapView({ t }: { t: Dictionary }) {
   const followRef = useRef(follow);
   const result = useMonitor((s) => s.result);
   const mode = useMonitor((s) => s.mode);
+  const error = useMonitor((s) => s.error);
+  const start = useMonitor((s) => s.start);
+  const stop = useMonitor((s) => s.stop);
 
   useEffect(() => {
     followRef.current = follow;
@@ -245,6 +248,25 @@ export default function MapView({ t }: { t: Dictionary }) {
       )}
 
       <div className="absolute inset-x-3 bottom-3 flex flex-col gap-2 rounded-card bg-[var(--app-bg)]/90 p-3 text-sm shadow-lg backdrop-blur">
+        {/* The map is the home screen, so monitoring can start right here. */}
+        {mode ? (
+          <button
+            type="button"
+            onClick={stop}
+            className="rounded-button border border-line px-5 py-2 text-base font-semibold"
+          >
+            {t.stop}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => start("gps")}
+            className="rounded-button bg-sea px-5 py-3 text-lg font-bold text-foam shadow dark:bg-lagoon dark:text-ink"
+          >
+            {t.start}
+          </button>
+        )}
+        {error && !mode && <p className="font-semibold text-state-danger-strong">{t.errors[error]}</p>}
         <div className="flex flex-wrap gap-x-4 gap-y-1">
           <Legend swatch={<span className="h-1 w-5 rounded bg-sand" />} label={t.map.legendShore} />
           <Legend swatch={<span className="h-3 w-5 rounded bg-alert/40" />} label={t.map.legendBand} />
