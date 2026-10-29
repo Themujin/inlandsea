@@ -19,6 +19,7 @@ export default async function MonitorPage({ params }: PageProps<"/[locale]">) {
         <p>{t.rule}</p>
         <p className="mt-2">{t.disclaimer}</p>
         <p className="mt-2">{t.privacy}</p>
+        <p className="mt-2">{t.dataCredit}</p>
       </section>
     </main>
   );

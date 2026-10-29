@@ -94,6 +94,10 @@ export default function MapView({ t }: { t: Dictionary }) {
 
   useEffect(() => {
     followRef.current = follow;
+    // Jump to the current position as soon as Follow is ticked, not on the next fix.
+    const fix = useMonitor.getState().fix;
+    if (follow && fix && mapRef.current)
+      mapRef.current.easeTo({ center: [fix.lon, fix.lat], zoom: Math.max(mapRef.current.getZoom(), 16) });
   }, [follow]);
 
   useEffect(() => {
@@ -107,7 +111,11 @@ export default function MapView({ t }: { t: Dictionary }) {
       attributionControl: false,
     });
     // Top-left so the imagery credit never sits under the legend panel.
-    if (basemap) map.addControl(new AttributionControl({ compact: true }), "top-left");
+    // Always shown: our shoreline layer is OSM-derived (ODbL), whether or not imagery is on.
+    map.addControl(
+      new AttributionControl({ compact: true, customAttribution: "Shoreline © OpenStreetMap contributors" }),
+      "top-left",
+    );
     mapRef.current = map;
     Promise.all([loadEngineData(), map.once("load")]).then(([data]) => {
       if (cancelled) return;
@@ -213,7 +221,8 @@ export default function MapView({ t }: { t: Dictionary }) {
       </div>
 
       {mode && state && (
-        <div className="absolute inset-x-3 top-3 flex justify-center">
+        // Below the top-left credit badge.
+        <div className="absolute inset-x-3 top-14 flex justify-center">
           <span
             data-state={state}
             className={`rounded-button px-4 py-2 font-bold shadow-lg ${

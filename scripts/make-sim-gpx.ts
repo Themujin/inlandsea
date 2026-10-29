@@ -26,7 +26,10 @@ const toXY = ([lon, lat]: LonLat) => [(lon - lon0) * kx, (lat - lat0) * ky];
 const toLonLat = (x: number, y: number): LonLat => [lon0 + x / kx, lat0 + y / ky];
 
 // Shoreline vertices from START_LAT southward, in metres.
-const line = mainShore.filter(([, lat]) => lat <= START_LAT).map(toXY);
+const line = mainShore
+  .filter(([, lat]) => lat <= START_LAT)
+  .sort((a, b) => b[1] - a[1]) // north → south, whatever order the file stores
+  .map(toXY);
 
 /** Point at arc length s along the line, pushed `offset` metres inland (west side). */
 function at(s: number, offset: number): LonLat {

@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
 
-// A vertex on the placeholder open-sea shore; inland is west.
-const SHORE = { latitude: 24.81, longitude: 51.495 };
-const M_PER_DEG_LON = 111_195 * Math.cos((24.81 * Math.PI) / 180);
+// Inland is roughly west here (the coast runs NNE).
+const SHORE = { latitude: 24.810126, longitude: 51.491547 }; // vertex of the shipped OSM shoreline
+const M_PER_DEG_LON = 111_195 * Math.cos((24.810126 * Math.PI) / 180);
 const inland = (m: number) => ({ ...SHORE, longitude: SHORE.longitude - m / M_PER_DEG_LON, accuracy: 5 });
 
 test.describe("live GPS (mocked)", () => {
@@ -33,7 +33,7 @@ test.describe("live GPS (mocked)", () => {
     const panel = page.getByTestId("status-panel");
     await expect(panel).toHaveAttribute("data-state", "SAFE");
     // 500 m due west; the shore runs at an angle, so the perpendicular distance is a bit less.
-    await expect(page.getByTestId("distance")).toHaveText(/^4[6-9]\d m$/);
+    await expect(page.getByTestId("distance")).toHaveText(/^4\d\d m$/);
     await expect(page.getByTestId("inland-arrow")).toBeVisible();
     await expect(page.getByTestId("danger-overlay")).toHaveCount(0);
 

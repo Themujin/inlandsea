@@ -17,3 +17,5 @@ Spec: docs/SPEC.md (source of truth)
 - Map: MapLibre worker is served from public/vendor (copied by scripts/copy-vendor.ts on
   predev/prebuild). Satellite (Esri World Imagery) is on by default at the owner's request; tile
   requests reveal the viewed area, and the toggle turns it off. Licence for this use is unconfirmed.
+- Shoreline data: `npm run geo:fetch` (OSM coastline → data/osm/) then `npm run geo:build`
+  (→ public/geo + sample GPX). Stretch ends and Khor mouth live in scripts/geo/area.ts.

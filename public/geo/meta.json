@@ -1,13 +1,14 @@
 {
-  "version": "0.0.0-placeholder",
-  "placeholder": true,
+  "version": "osm-2026-07-15",
+  "placeholder": false,
   "date": "2026-10-29",
   "sources": [
-    "Hand-approximated placeholder. Replace via the M4 data pipeline."
+    "OpenStreetMap natural=coastline (OSM base 2026-07-15T15:22:01Z). © OpenStreetMap contributors, ODbL 1.0.",
+    "Simplified 2 m, split ≤ 200 m. Not an official survey."
   ],
   "sha256": {
-    "corridor.geojson": "316f96953ed54dc6e552e6c96ebaa526818c810208da606e96865a15466f9432",
-    "shoreline.geojson": "1fc3fbb0f3dd11aea841fd62b31ec4468d7ac49adf2991c5240d48439853e443",
+    "shoreline.geojson": "89e178be27392fa8b53ecf6745d895ffdded9268bf3ff0068a1d138b71bc5ec6",
+    "corridor.geojson": "27fe4ddd2c3ff1f1d61f2b2ba5dbb94d5cf5b78d6ce17d56b56facf2da05d211",
     "exclusions.geojson": "ed778c73ea51338d6576fb5992b189f2b94d9f3d5e199f46c1af520d6b0b3e6c"
   }
 }
