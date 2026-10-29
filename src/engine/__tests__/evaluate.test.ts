@@ -2,7 +2,17 @@ import { describe, expect, it } from "vitest";
 import { evaluate } from "../evaluate";
 import type { ShoreGeometry } from "../geometry";
 import type { LonLat } from "../types";
-import { CONFIG, GEOMETRY, INNER_LON, LAT, NOW, SHORE_LON, fixAt, metresToDegLon } from "./fixtures";
+import {
+  CONFIG,
+  GEOMETRY,
+  INNER_LON,
+  LAT,
+  NOW,
+  SHIPPED_CONFIG,
+  SHORE_LON,
+  fixAt,
+  metresToDegLon,
+} from "./fixtures";
 
 // Zero accuracy penalty so distance assertions are about geometry only.
 const exact = { ...CONFIG, accuracyCapMeters: 0 };
@@ -90,6 +100,34 @@ describe("evaluate: accuracy-adjusted distance", () => {
     const r = evaluate(fixAt(100, { accuracy: 45 }), GEOMETRY, CONFIG, NOW);
     expect(r.effectiveM).toBeCloseTo(75, 0);
     expect(r.state).toBe("SAFE");
+  });
+});
+
+describe("evaluate: tide margin (shipped config: 30 m rule + 10 m)", () => {
+  const shipped = { ...SHIPPED_CONFIG, accuracyCapMeters: 0 };
+
+  it("ships a 10 m margin", () => {
+    expect(SHIPPED_CONFIG.tideMarginMeters).toBe(10);
+  });
+
+  it.each([
+    [25, "DANGER"],
+    [39, "DANGER"],
+    [41, "CAUTION"],
+    [69, "CAUTION"],
+    [71, "SAFE"],
+  ] as const)("%i m → %s", (d, state) => {
+    const r = evaluate(fixAt(d), GEOMETRY, shipped, NOW);
+    expect(r.state).toBe(state);
+    // The displayed distance stays the true distance to the mapped shoreline.
+    expect(Math.abs(r.distanceM! - d)).toBeLessThanOrEqual(1);
+    expect(Math.abs(r.effectiveM! - (d - 10))).toBeLessThanOrEqual(1);
+  });
+
+  it("stacks with the accuracy penalty: 5 m accuracy at 44 m → effective 29 m → DANGER", () => {
+    const r = evaluate(fixAt(44, { accuracy: 5 }), GEOMETRY, SHIPPED_CONFIG, NOW);
+    expect(r.effectiveM).toBeCloseTo(29, 0);
+    expect(r.state).toBe("DANGER");
   });
 });
 

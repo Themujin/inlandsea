@@ -3,7 +3,10 @@ import { buildGeometry, type FeatureCollection } from "../geometry";
 import { EARTH_RADIUS_M } from "../projection";
 import type { EngineConfig, Fix, LonLat } from "../types";
 
-export const CONFIG: EngineConfig = config;
+/** The shipped config, tide margin included. */
+export const SHIPPED_CONFIG: EngineConfig = config;
+/** Shipped config with no tide margin, so threshold tests read as the plain 30/60 m rule. */
+export const CONFIG: EngineConfig = { ...config, tideMarginMeters: 0 };
 export const NOW = 1_800_000_000_000;
 
 /** Synthetic straight N–S shoreline at lon 51.5; sea to the east, land to the west. */

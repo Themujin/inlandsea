@@ -16,6 +16,8 @@ export interface Fix {
 export interface EngineConfig {
   dangerMeters: number;
   cautionMeters: number;
+  /** Safety margin for tides: the waterline may sit this far landward of the mapped line. */
+  tideMarginMeters: number;
   exitMarginMeters: number;
   maxAccuracyMeters: number;
   accuracyCapMeters: number;
@@ -35,7 +37,7 @@ export interface ZoneResult {
   state: ZoneState;
   /** Distance to nearest shoreline, metres. `null` when not computed. */
   distanceM: number | null;
-  /** distance − min(accuracy, accuracyCap). Used for classification. */
+  /** distance − min(accuracy, accuracyCap) − tideMargin. Used for classification. */
   effectiveM: number | null;
   nearestPoint: LonLat | null;
   /** Compass bearing (deg from north) pointing from the shoreline to the user, i.e. inland. */

@@ -84,8 +84,10 @@ export function evaluate(
   }
 
   const distanceM = Math.sqrt(best);
-  // 5. Accuracy-adjusted distance: assume the worst case within the error radius.
-  const effectiveM = distanceM - Math.min(accuracyM, config.accuracyCapMeters);
+  // 5. Accuracy-adjusted distance: assume the worst case within the error radius, and that
+  // the waterline has moved tideMarginMeters landward of the mapped shoreline.
+  const effectiveM =
+    distanceM - Math.min(accuracyM, config.accuracyCapMeters) - config.tideMarginMeters;
   // 8. Inland bearing: vector from nearest shore point (bx, by) to the user (origin).
   const bearingInland =
     distanceM > ON_LINE_M ?((Math.atan2(-bx, -by) * 180) / Math.PI + 360) % 360 : null;

@@ -10,9 +10,9 @@
     "NO_FIX": "Waiting for GPS"
   },
   "stateHints": {
-    "DANGER": "Less than 30 m from the shoreline",
-    "CAUTION": "30–60 m from the shoreline",
-    "SAFE": "More than 60 m from the shoreline",
+    "DANGER": "Within {danger} m of the shoreline ({rule} m rule + {tide} m tide margin)",
+    "CAUTION": "{danger}–{caution} m from the shoreline",
+    "SAFE": "More than {caution} m from the shoreline",
     "OUT_OF_AREA": "Not on the Sealine – Khor Al Adaid coast",
     "NO_FIX": "No position, or accuracy worse than 50 m"
   },
@@ -36,7 +36,7 @@
   "northUp": "Inland, north up",
   "acknowledge": "Acknowledge — silence 2 min",
   "silenced": "Siren silenced",
-  "parked": "Parked within 30 m",
+  "parked": "Parked within {danger} m",
   "wakeLockOff": "Screen may sleep. Keep the app open and the phone mounted.",
   "errors": {
     "denied": "Location access is blocked.",
@@ -54,11 +54,11 @@
     "basemapNote": "Downloads satellite images of the area you are viewing. Turn off to stay fully private and offline.",
     "follow": "Follow me",
     "legendShore": "Shoreline",
-    "legendBand": "30 m no-drive band",
+    "legendBand": "{danger} m warning band ({rule} m + {tide} m tide)",
     "legendCorridor": "Regulated area"
   },
   "speech": {
-    "DANGER": "Move inland. You are within 30 metres of the shoreline.",
+    "DANGER": "Move inland. You are within {danger} metres of the shoreline.",
     "CAUTION": "Caution. You are approaching the shoreline."
   },
   "dataCredit": "Shoreline data © OpenStreetMap contributors (ODbL)."

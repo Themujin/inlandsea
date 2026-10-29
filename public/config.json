@@ -1,6 +1,7 @@
 {
   "dangerMeters": 30,
   "cautionMeters": 60,
+  "tideMarginMeters": 10,
   "exitMarginMeters": 5,
   "maxAccuracyMeters": 50,
   "accuracyCapMeters": 25,

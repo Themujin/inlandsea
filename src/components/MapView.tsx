@@ -35,7 +35,6 @@ const SATELLITE_STYLE: StyleSpecification = {
   layers: [GROUND, { id: "satellite", type: "raster", source: "satellite" }],
 };
 
-const BAND_M = 30;
 const EARTH_CIRCUMFERENCE_M = 40_075_016.686;
 
 /** Line width in px that spans `metres` on the ground at `lat` (MapLibre uses 512 px tiles). */
@@ -131,13 +130,17 @@ export default function MapView({ t }: { t: Dictionary }) {
         source: "corridor",
         paint: { "line-color": BRAND.lagoon, "line-width": 1.5, "line-dasharray": [3, 2] },
       });
-      // 30 m each side of the line = a 60 m wide stroke.
+      // Warning distance (rule + tide margin) each side of the line = a stroke twice as wide.
       map.addLayer({
         id: "band",
         type: "line",
         source: "shoreline",
         layout: { "line-cap": "round", "line-join": "round" },
-        paint: { "line-color": BRAND.alert, "line-opacity": 0.35, "line-width": metresToPixels(2 * BAND_M, lat) },
+        paint: {
+          "line-color": BRAND.alert,
+          "line-opacity": 0.35,
+          "line-width": metresToPixels(2 * (data.config.dangerMeters + data.config.tideMarginMeters), lat),
+        },
       });
       // Dark casing keeps the sand-coloured line readable over bright desert imagery.
       map.addLayer({
