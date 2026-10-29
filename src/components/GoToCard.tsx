@@ -1,6 +1,6 @@
 "use client";
 
-import type { RouteCheck } from "@/engine/route";
+import type { GoToPlan } from "@/engine/route";
 import type { Dictionary } from "@/i18n";
 import { formatTripDistance } from "@/lib/format";
 import { useDestination } from "@/store/destination";
@@ -8,11 +8,13 @@ import { useMonitor } from "@/store/monitor";
 
 /** Below this speed the GPS heading is noise; show a north-up arrow instead. */
 const MIN_HEADING_SPEED = 2;
+/** Mention the off-road leg to the first track when it is at least this long. */
+const OFFROAD_NOTE_M = 50;
 
 interface Props {
   t: Dictionary;
-  /** Straight path from the current fix, or null when there is no fix yet. */
-  route: RouteCheck | null;
+  /** Plan from the current fix, or null when there is no fix yet. */
+  route: GoToPlan | null;
   monitoring: boolean;
 }
 
@@ -54,8 +56,13 @@ export function GoToCard({ t, route, monitoring }: Props) {
             {t.goto.crosses}
           </p>
         )}
-        {route && !route.crossesBand && route.minShoreM !== null && (
-          <p className="text-xs text-muted">{t.goto.clearPath}</p>
+        {route && (
+          <p className="text-xs text-muted">
+            {route.kind === "roads" ? t.goto.viaRoads : t.goto.straight}
+            {route.kind === "roads" &&
+              route.accessM >= OFFROAD_NOTE_M &&
+              ` · ${t.goto.offroad.replace("{n}", formatTripDistance(route.accessM, t))}`}
+          </p>
         )}
       </div>
       <button

@@ -1,4 +1,5 @@
 import { buildGeometry, type FeatureCollection, type ShoreGeometry } from "@/engine/geometry";
+import { buildRoadGraph, type RoadData, type RoadGraph } from "@/engine/roads";
 import type { EngineConfig } from "@/engine/types";
 
 export interface GeoMeta {
@@ -45,4 +46,17 @@ export function loadEngineData(): Promise<EngineData> {
     throw err;
   });
   return pending;
+}
+
+let pendingRoads: Promise<RoadGraph | null> | null = null;
+
+/** Loads the road/track network for "go to" routing; null if unavailable (straight-line fallback). */
+export function loadRoads(): Promise<RoadGraph | null> {
+  pendingRoads ??= getJson<RoadData>("/geo/roads.json")
+    .then(buildRoadGraph)
+    .catch(() => {
+      pendingRoads = null;
+      return null;
+    });
+  return pendingRoads;
 }

@@ -13,8 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",
-    "geo:fetch": "tsx scripts/geo/fetch-osm.ts",
-    "geo:build": "tsx scripts/geo/build.ts && tsx scripts/make-sim-gpx.ts"
+    "geo:fetch": "tsx scripts/geo/fetch-osm.ts && tsx scripts/geo/fetch-roads.ts",
+    "geo:build": "tsx scripts/geo/build.ts && tsx scripts/geo/build-roads.ts && tsx scripts/make-sim-gpx.ts"
   },
   "dependencies": {
     "idb": "^8.0.4",

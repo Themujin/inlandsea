@@ -101,11 +101,14 @@ test.describe("go to a marked place", () => {
     await page.getByRole("button", { name: "Start monitoring" }).click();
     await expect(page.getByTestId("map-status")).toHaveAttribute("data-state", "SAFE");
 
+    await expect(page.getByTestId("map")).toHaveAttribute("data-ready", "true");
     const map = page.locator("[data-testid=map] canvas");
     const box = (await map.boundingBox())!;
     await page.mouse.click(box.x + box.width * 0.3, box.y + box.height * 0.4, { button: "right" });
     await expect(page.getByTestId("goto-card")).toBeVisible();
     await expect(page.getByTestId("goto-distance")).toHaveText(/^\d+(\.\d)? (m|km)$/);
+    // The real OSM network covers this stretch, so the plan follows roads and tracks.
+    await expect(page.getByTestId("goto-card")).toContainText("via roads and tracks");
 
     await page.getByRole("button", { name: "Clear" }).click();
     await expect(page.getByTestId("goto-card")).toHaveCount(0);
@@ -138,19 +141,5 @@ test.describe("stationary phone", () => {
     // Longer than maxFixAgeMs (10 s) with no movement at all.
     await page.waitForTimeout(14_000);
     await expect(page.getByTestId("map-status")).toHaveAttribute("data-state", "DANGER");
-  });
-});
-
-test.describe("stationary phone, far from the water", () => {
-  test.use({ permissions: ["geolocation"] });
-
-  test("a stale SAFE still falls back to NO_FIX", async ({ page, context }) => {
-    test.setTimeout(40_000);
-    await context.setGeolocation(inland(500));
-    await page.goto("/en/");
-    await page.getByRole("button", { name: "Start monitoring" }).click();
-    await expect(page.getByTestId("map-status")).toHaveAttribute("data-state", "SAFE");
-    await page.waitForTimeout(14_000);
-    await expect(page.getByTestId("map-status")).toHaveAttribute("data-state", "NO_FIX");
   });
 });

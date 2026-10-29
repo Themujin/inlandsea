@@ -20,6 +20,8 @@ Spec: docs/SPEC.md (source of truth)
   requests reveal the viewed area, and the toggle turns it off. Licence for this use is unconfirmed.
 - Shoreline data: `npm run geo:fetch` (OSM coastline → data/osm/) then `npm run geo:build`
   (→ public/geo + sample GPX). Stretch ends and Khor mouth live in scripts/geo/area.ts.
-- "Go to" pin is stored in localStorage only; path is a straight line checked against the band
-  by src/engine/route.ts (no routing server: coordinates stay local). Contours were tried and
+- "Go to" pin is stored in localStorage only. Routing runs on-device (src/engine/roads.ts, A*)
+  over public/geo/roads.json (OSM roads/tracks; edges inside the band dropped at build by
+  scripts/geo/build-roads.ts); off-road legs and the straight fallback are checked by
+  src/engine/route.ts. No routing server: coordinates stay local. Contours were tried and
   removed: free DEMs (~30 m, ~2000–2015) misrepresent moving dunes.

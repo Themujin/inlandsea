@@ -5,8 +5,9 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useRef, useState } from "react";
 import type { Dictionary } from "@/i18n";
 import { BRAND } from "@/lib/brandColors";
-import { loadEngineData } from "@/lib/engineData";
-import { checkRoute, type RouteCheck } from "@/engine/route";
+import { loadEngineData, loadRoads } from "@/lib/engineData";
+import type { RoadGraph } from "@/engine/roads";
+import { type GoToPlan, planGoTo } from "@/engine/route";
 import type { LonLat } from "@/engine/types";
 import { vibrate } from "@/sensors/device";
 import type { SensorFix } from "@/sensors/types";
@@ -82,14 +83,14 @@ function userFeatures(fix: SensorFix | null, nearest: [number, number] | null) {
 
 const EMPTY_FC = { type: "FeatureCollection" as const, features: [] };
 
-function routeFeatures(from: SensorFix | null, to: LonLat | null, crosses: boolean) {
+function routeFeatures(to: LonLat | null, plan: GoToPlan | null) {
   const features: GeoJSON.Feature[] = [];
   if (to) features.push({ type: "Feature", properties: { kind: "dest" }, geometry: { type: "Point", coordinates: to } });
-  if (from && to)
+  if (plan)
     features.push({
       type: "Feature",
-      properties: { kind: "path", crosses },
-      geometry: { type: "LineString", coordinates: [[from.lon, from.lat], to] },
+      properties: { kind: "path", crosses: plan.crossesBand },
+      geometry: { type: "LineString", coordinates: plan.coords },
     });
   return { type: "FeatureCollection" as const, features };
 }
@@ -110,7 +111,7 @@ export default function MapView({ t }: { t: Dictionary }) {
   const [basemap, setBasemap] = useState(readBasemap);
   const [follow, setFollow] = useState(false);
   const [layersOpen, setLayersOpen] = useState(false);
-  const [route, setRoute] = useState<RouteCheck | null>(null);
+  const [route, setRoute] = useState<GoToPlan | null>(null);
   const destination = useDestination((s) => s.destination);
   const followRef = useRef(follow);
   const mode = useMonitor((s) => s.mode);
@@ -183,16 +184,24 @@ export default function MapView({ t }: { t: Dictionary }) {
         source: "shoreline",
         paint: { "line-color": BRAND.sand, "line-width": 2 },
       });
+      // Solid with a dark casing, so the route never reads as the dashed corridor outline.
+      map.addLayer({
+        id: "path-casing",
+        type: "line",
+        source: "route",
+        filter: ["==", ["get", "kind"], "path"],
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: { "line-color": BRAND.ink, "line-width": 7, "line-opacity": 0.7 },
+      });
       map.addLayer({
         id: "path",
         type: "line",
         source: "route",
         filter: ["==", ["get", "kind"], "path"],
-        layout: { "line-cap": "round" },
+        layout: { "line-cap": "round", "line-join": "round" },
         paint: {
           "line-color": ["case", ["get", "crosses"], BRAND.alert, BRAND.lagoon],
-          "line-width": 3,
-          "line-dasharray": [2, 1.5],
+          "line-width": 4,
         },
       });
       map.addLayer({
@@ -237,15 +246,25 @@ export default function MapView({ t }: { t: Dictionary }) {
       container.current?.querySelector(".maplibregl-ctrl-attrib")?.classList.remove("maplibregl-compact-show");
       map.setMaxBounds([b.minX - 0.3, b.minY - 0.3, b.maxX + 0.3, b.maxY + 0.3]);
 
-      // Straight "go to" path from the current fix, checked against the shore band.
+      // "Go to" plan from the current fix: roads and tracks when the network is loaded and
+      // nearby, otherwise a straight line; off-road parts are checked against the shore band.
+      // The network is only loaded once a destination exists (it is ~0.7 MB to parse and index).
+      let roads: RoadGraph | null = null;
+      let roadsRequested = false;
       const pushRoute = () => {
         const fix = useMonitor.getState().fix;
         const dest = useDestination.getState().destination;
-        const check = fix && dest ? checkRoute([fix.lon, fix.lat], dest, data.geometry, data.config) : null;
-        setRoute(check);
-        (map.getSource("route") as GeoJSONSource | undefined)?.setData(
-          routeFeatures(fix, dest, check?.crossesBand ?? false),
-        );
+        if (dest && !roadsRequested) {
+          roadsRequested = true;
+          void loadRoads().then((graph) => {
+            if (cancelled) return;
+            roads = graph;
+            pushRoute();
+          });
+        }
+        const plan = fix && dest ? planGoTo([fix.lon, fix.lat], dest, data.geometry, data.config, roads) : null;
+        setRoute(plan);
+        (map.getSource("route") as GeoJSONSource | undefined)?.setData(routeFeatures(dest, plan));
       };
       const push = () => {
         const { fix, result } = useMonitor.getState();
@@ -276,6 +295,8 @@ export default function MapView({ t }: { t: Dictionary }) {
       map.on("touchmove", cancelPress);
       map.on("dragstart", cancelPress);
       map.on("contextmenu", (e) => mark(e.lngLat));
+      // Layers and handlers are in place (used by e2e tests to avoid racing the load).
+      container.current?.setAttribute("data-ready", "true");
 
       map.once("remove", () => {
         offFix();

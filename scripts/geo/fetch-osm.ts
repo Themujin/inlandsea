@@ -4,42 +4,11 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { BBOX } from "./area";
-
-const MIRRORS = [
-  "https://overpass-api.de/api/interpreter",
-  "https://overpass.kumi.systems/api/interpreter",
-  "https://overpass.private.coffee/api/interpreter",
-];
-
-interface OverpassWay {
-  type: "way";
-  id: number;
-  geometry: { lat: number; lon: number }[];
-}
-
-async function query(): Promise<{ osm3s: { timestamp_osm_base: string }; elements: OverpassWay[] }> {
-  const [s, w, n, e] = [BBOX.minLat, BBOX.minLon, BBOX.maxLat, BBOX.maxLon];
-  const body = new URLSearchParams({
-    data: `[out:json][timeout:90];way["natural"="coastline"](${s},${w},${n},${e});out geom;`,
-  });
-  for (const url of MIRRORS) {
-    try {
-      const res = await fetch(url, {
-        method: "POST",
-        body,
-        headers: { "User-Agent": "ShorelineGuard/0.1 (data pipeline)" },
-      });
-      if (res.ok) return await res.json();
-      console.warn(`[fetch-osm] ${url}: HTTP ${res.status}`);
-    } catch (err) {
-      console.warn(`[fetch-osm] ${url}: ${(err as Error).message}`);
-    }
-  }
-  throw new Error("All Overpass mirrors failed");
-}
+import { overpass } from "./overpass";
 
 async function main() {
-  const data = await query();
+  const [s, w, n, e] = [BBOX.minLat, BBOX.minLon, BBOX.maxLat, BBOX.maxLon];
+  const data = await overpass(`[out:json][timeout:90];way["natural"="coastline"](${s},${w},${n},${e});out geom;`);
   const ways = data.elements
     .filter((el) => el.type === "way")
     .map((el) => ({

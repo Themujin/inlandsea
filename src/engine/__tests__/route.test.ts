@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { checkRoute, initialBearing } from "../route";
+import { buildRoadGraph } from "../roads";
+import { checkRoute, initialBearing, planGoTo } from "../route";
 import type { LonLat } from "../types";
 import { GEOMETRY, LAT, SHIPPED_CONFIG, SHORE_LON, metresToDegLon } from "./fixtures";
 
@@ -61,5 +62,37 @@ describe("initialBearing", () => {
     [[51, 24.8], [50.9, 24.8], 270],
   ] as [LonLat, LonLat, number][])("%j → %j ≈ %i°", (a, b, deg) => {
     expect(initialBearing(a, b)).toBeCloseTo(deg, 0);
+  });
+});
+
+describe("planGoTo", () => {
+  it("falls back to a straight line without a road network", () => {
+    const p = planGoTo(at(300, 0), at(300, 1000), GEOMETRY, SHIPPED_CONFIG, null);
+    expect(p.kind).toBe("straight");
+    expect(p.coords).toHaveLength(2);
+    expect(p.crossesBand).toBe(false);
+  });
+
+  it("uses a road parallel to the shore and checks only the off-road legs", () => {
+    // A straight road 300 m inland running north–south.
+    const a = at(300, -2000);
+    const b = at(300, 2000);
+    const roads = buildRoadGraph({ osmBase: "t", v: [...a, ...b], e: [0, 1, 0], len: [4000], cost: [1], g: [[]] });
+    const plan = planGoTo(at(500, 0), at(500, 1500), GEOMETRY, SHIPPED_CONFIG, roads);
+    expect(plan.kind).toBe("roads");
+    expect(Math.abs(plan.accessM - 200)).toBeLessThanOrEqual(2);
+    expect(Math.abs(plan.distanceM - (200 + 1500 + 200))).toBeLessThanOrEqual(5);
+    expect(plan.crossesBand).toBe(false);
+    // First move: towards the road (east, to the shore side of us).
+    expect(plan.bearing).toBeCloseTo(90, 0);
+  });
+
+  it("flags an off-road leg to a pin inside the band", () => {
+    const a = at(300, -2000);
+    const b = at(300, 2000);
+    const roads = buildRoadGraph({ osmBase: "t", v: [...a, ...b], e: [0, 1, 0], len: [4000], cost: [1], g: [[]] });
+    const plan = planGoTo(at(500, 0), at(15, 1500), GEOMETRY, SHIPPED_CONFIG, roads);
+    expect(plan.kind).toBe("roads");
+    expect(plan.crossesBand).toBe(true);
   });
 });

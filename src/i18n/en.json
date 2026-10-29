@@ -68,9 +68,11 @@
     "title": "Go to",
     "clear": "Clear",
     "startForDistance": "Start monitoring to see distance and direction.",
-    "crosses": "The straight path passes within {danger} m of the shoreline. Go around.",
-    "clearPath": "Path stays clear of the shore band.",
-    "bearing": "Direction"
+    "crosses": "The off-road part passes within {danger} m of the shoreline. Go around.",
+    "bearing": "Direction",
+    "viaRoads": "via roads and tracks",
+    "straight": "Straight line: no track nearby",
+    "offroad": "{n} off-road to the nearest track"
   },
   "km": "km"
 }

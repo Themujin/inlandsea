@@ -7,6 +7,9 @@ export default defineConfig({
   testDir: "e2e",
   fullyParallel: true,
   retries: process.env.CI ? 2 : 0,
+  // MapLibre + WebGL start-up is slow when many browsers share one machine.
+  workers: 4,
+  expect: { timeout: 10_000 },
   use: {
     baseURL: `http://localhost:${PORT}`,
     trace: "on-first-retry",

@@ -1,6 +1,7 @@
 import { nearestShore } from "./evaluate";
 import type { ShoreGeometry } from "./geometry";
 import { haversineM } from "./projection";
+import { type RoadGraph, routeOnRoads } from "./roads";
 import type { EngineConfig, LonLat } from "./types";
 
 export interface RouteCheck {
@@ -54,5 +55,55 @@ export function checkRoute(
     bearing: initialBearing(from, to),
     crossesBand: minShoreM !== null && minShoreM < bandM,
     minShoreM,
+  };
+}
+
+export interface GoToPlan {
+  /** "roads": via the OSM road/track network; "straight": direct line (no road nearby). */
+  kind: "roads" | "straight";
+  coords: LonLat[];
+  /** Total distance along the plan, metres. */
+  distanceM: number;
+  /** Compass bearing to follow now: towards the next point ≥ 30 m along the plan. */
+  bearing: number;
+  /** Off-road leg to the first road (0 for a straight plan). */
+  accessM: number;
+  /** True when any straight (off-road) part passes inside the warning band. */
+  crossesBand: boolean;
+}
+
+const NEXT_POINT_M = 30;
+
+/** Plans the "go to" path: roads and tracks when available, otherwise a straight line. */
+export function planGoTo(
+  from: LonLat,
+  to: LonLat,
+  geometry: ShoreGeometry,
+  config: EngineConfig,
+  roads: RoadGraph | null,
+): GoToPlan {
+  const viaRoads = roads ? routeOnRoads(roads, from, to) : null;
+  if (viaRoads) {
+    // Road edges inside the band were removed at build time; only the off-road legs need checking.
+    const access = checkRoute(from, viaRoads.join, geometry, config);
+    const egress = checkRoute(viaRoads.leave, to, geometry, config);
+    const next = viaRoads.coords.find((p) => haversineM(from, p) >= NEXT_POINT_M) ?? to;
+    return {
+      kind: "roads",
+      coords: viaRoads.coords,
+      distanceM: viaRoads.totalM,
+      bearing: initialBearing(from, next),
+      accessM: viaRoads.accessM,
+      crossesBand: access.crossesBand || egress.crossesBand,
+    };
+  }
+  const straight = checkRoute(from, to, geometry, config);
+  return {
+    kind: "straight",
+    coords: [from, to],
+    distanceM: straight.distanceM,
+    bearing: straight.bearing,
+    accessM: 0,
+    crossesBand: straight.crossesBand,
   };
 }
