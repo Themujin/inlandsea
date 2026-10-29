@@ -44,6 +44,8 @@ const SATELLITE_STYLE: StyleSpecification = {
 };
 
 const INITIAL_ZOOM_IN = 1;
+/** Panning limit: all of Qatar, so the map can show drivers coming from Doha or further. */
+const QATAR_BOUNDS: [number, number, number, number] = [50.6, 24.3, 51.8, 26.3];
 const EARTH_CIRCUMFERENCE_M = 40_075_016.686;
 
 /** Line width in px that spans `metres` on the ground at `lat` (MapLibre uses 512 px tiles). */
@@ -244,7 +246,7 @@ export default function MapView({ t }: { t: Dictionary }) {
       map.jumpTo({ zoom: map.getZoom() + INITIAL_ZOOM_IN });
       // Start the credit collapsed to its (i) button so it does not cover the status card.
       container.current?.querySelector(".maplibregl-ctrl-attrib")?.classList.remove("maplibregl-compact-show");
-      map.setMaxBounds([b.minX - 0.3, b.minY - 0.3, b.maxX + 0.3, b.maxY + 0.3]);
+      map.setMaxBounds(QATAR_BOUNDS);
 
       // "Go to" plan from the current fix: roads and tracks when the network is loaded and
       // nearby, otherwise a straight line; off-road parts are checked against the shore band.

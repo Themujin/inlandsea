@@ -72,7 +72,7 @@
     "bearing": "Direction",
     "viaRoads": "via roads and tracks",
     "straight": "Straight line: no track nearby",
-    "offroad": "{n} off-road to the nearest track"
+    "offroad": "{n} to the nearest mapped road or track"
   },
   "km": "km"
 }

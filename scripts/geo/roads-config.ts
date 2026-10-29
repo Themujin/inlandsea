@@ -25,3 +25,22 @@ export const NO_ACCESS = new Set(["no", "private"]);
 
 /** Geometry simplification for drawing routes (metres). */
 export const ROAD_SIMPLIFY_M = 4;
+
+type Box = { minLat: number; minLon: number; maxLat: number; maxLon: number };
+
+/**
+ * Extra, sparser road tiers beyond the coast bbox so routes can start from Doha and the
+ * rest of Qatar: each tier adds only the listed classes inside its box.
+ */
+export const OUTER_TIERS: { name: string; bbox: Box; classes: string[] }[] = [
+  {
+    name: "Qatar main roads",
+    bbox: { minLat: 24.4, minLon: 50.7, maxLat: 26.2, maxLon: 51.7 },
+    classes: ["motorway", "motorway_link", "trunk", "trunk_link", "primary", "primary_link"],
+  },
+  {
+    name: "Doha south to Sealine",
+    bbox: { minLat: 24.4, minLon: 50.75, maxLat: 25.45, maxLon: 51.65 },
+    classes: ["secondary", "secondary_link", "tertiary", "tertiary_link"],
+  },
+];

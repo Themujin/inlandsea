@@ -49,3 +49,6 @@ next-env.d.ts
 
 # copied from node_modules by scripts/copy-vendor.ts
 /public/vendor/
+
+# raw OSM road download (7 MB); regenerate with npm run geo:fetch. Built network is public/geo/roads.json
+/data/osm/roads.json

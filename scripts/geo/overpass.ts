@@ -18,7 +18,23 @@ export interface OverpassResult {
   elements: OverpassWay[];
 }
 
+/** Public Overpass servers are often busy (502/504); retry the mirror list with backoff. */
+const ROUNDS = 4;
+const BACKOFF_MS = 20_000;
+
 export async function overpass(query: string): Promise<OverpassResult> {
+  for (let round = 0; round < ROUNDS; round++) {
+    if (round > 0) {
+      console.warn(`[overpass] all mirrors busy; retrying in ${(BACKOFF_MS * round) / 1000} s`);
+      await new Promise((r) => setTimeout(r, BACKOFF_MS * round));
+    }
+    const result = await tryMirrors(query);
+    if (result) return result;
+  }
+  throw new Error("All Overpass mirrors failed");
+}
+
+async function tryMirrors(query: string): Promise<OverpassResult | null> {
   const body = new URLSearchParams({ data: query });
   for (const url of MIRRORS) {
     try {
@@ -33,5 +49,5 @@ export async function overpass(query: string): Promise<OverpassResult> {
       console.warn(`[overpass] ${url}: ${(err as Error).message}`);
     }
   }
-  throw new Error("All Overpass mirrors failed");
+  return null;
 }
