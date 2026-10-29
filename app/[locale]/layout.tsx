@@ -1,12 +1,17 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Noto_Sans_Arabic } from "next/font/google";
+import { IBM_Plex_Sans_Arabic, Inter } from "next/font/google";
 import { notFound } from "next/navigation";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { LOCALES, dirOf, getDictionary, isLocale } from "@/i18n";
 import "../globals.css";
 
-const geist = Geist({ variable: "--font-latin", subsets: ["latin"] });
-const notoArabic = Noto_Sans_Arabic({ variable: "--font-arabic", subsets: ["arabic"] });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
+const plexArabic = IBM_Plex_Sans_Arabic({
+  subsets: ["arabic"],
+  weight: ["400", "600", "700"],
+  variable: "--font-plex-arabic",
+  display: "swap",
+});
 
 export const dynamicParams = false;
 
@@ -14,21 +19,34 @@ export function generateStaticParams() {
   return LOCALES.map((locale) => ({ locale }));
 }
 
+// Deployed origin for absolute OG image URLs. Set SITE_URL at build time.
+const SITE_URL = process.env.SITE_URL;
+
 export async function generateMetadata({ params }: LayoutProps<"/[locale]">): Promise<Metadata> {
   const { locale } = await params;
   if (!isLocale(locale)) return {};
   const t = getDictionary(locale);
   return {
-    title: t.appName,
+    ...(SITE_URL && { metadataBase: new URL(SITE_URL) }),
+    title: { default: t.appName, template: `%s · ${t.appName}` },
     description: t.tagline,
+    applicationName: "Shoreline Guard",
     manifest: "/manifest.webmanifest",
     appleWebApp: { capable: true, title: t.appName, statusBarStyle: "black-translucent" },
-    icons: { icon: "/icons/icon-192.png", apple: "/icons/apple-touch-icon.png" },
+    openGraph: {
+      title: "Shoreline Guard · حارس الشاطئ",
+      description: t.tagline,
+      images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+    },
+    // app/icon.svg, app/apple-icon.png and app/favicon.ico are picked up automatically.
   };
 }
 
 export const viewport: Viewport = {
-  themeColor: "#0b1220",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#0B3B5C" },
+    { media: "(prefers-color-scheme: dark)", color: "#0E2230" },
+  ],
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -41,9 +59,11 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
     <html
       lang={locale}
       dir={dirOf(locale)}
-      className={`${geist.variable} ${notoArabic.variable} h-full antialiased`}
+      className={`${inter.variable} ${plexArabic.variable}`}
     >
-      <body className="min-h-full flex flex-col">
+      <body
+        className={`flex min-h-dvh flex-col antialiased ${locale === "ar" ? "font-arabic" : "font-sans"}`}
+      >
         {children}
         <ServiceWorkerRegister />
       </body>

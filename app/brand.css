@@ -1,0 +1,60 @@
+/*
+ * Shoreline Guard — brand tokens (Tailwind CSS v4)
+ * Import once from app/globals.css:  @import "./brand.css";
+ * Every token becomes a utility: bg-sea, text-sand, border-alert, bg-state-danger, font-sans, ...
+ */
+
+@theme {
+  /* ---- Brand palette ---- */
+  --color-sea: #0B3B5C;        /* Deep sea — primary, app background in dark UI */
+  --color-sand: #EBCB8F;       /* Sand — land, highlights */
+  --color-lagoon: #1FA3A0;     /* Lagoon — accent, links on dark */
+  --color-channel: #12708A;    /* Channel — secondary, links on light */
+  --color-alert: #E5484D;      /* Alert red — the 30 m line, DANGER */
+  --color-foam: #F7F1E3;       /* Foam — light ground, text on dark */
+  --color-ink: #0E2230;        /* Night ink — darkest ground */
+
+  /* ---- Zone states (see spec §3) ----
+     *-strong = for surfaces carrying white text (meets 4.5:1) */
+  --color-state-danger: #E5484D;
+  --color-state-danger-strong: #B4232A;
+  --color-state-caution: #F5A524;      /* use ink text on it */
+  --color-state-caution-strong: #A85F00;
+  --color-state-safe: #2E9E6A;
+  --color-state-safe-strong: #1D7A4F;
+  --color-state-idle: #8A96A3;         /* OUT_OF_AREA, NO_FIX */
+  --color-state-idle-strong: #4F5B66;
+
+  /* ---- Type ---- */
+  --font-sans: var(--font-inter), var(--font-plex-arabic), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-arabic: var(--font-plex-arabic), var(--font-inter), system-ui, sans-serif;
+
+  /* Monitor screen reads at arm's length in a car mount */
+  --text-distance: 5.5rem;     /* the big "23 m" number */
+  --text-distance--line-height: 1;
+  --text-state: 2.25rem;       /* SAFE / CAUTION / DANGER */
+  --text-state--line-height: 1.1;
+
+  /* ---- Shape ---- */
+  --radius-card: 1.25rem;
+  --radius-button: 999px;
+}
+
+/* App-level defaults */
+:root {
+  color-scheme: light dark;
+  --app-bg: var(--color-foam);
+  --app-fg: var(--color-sea);
+}
+@media (prefers-color-scheme: dark) {
+  :root { --app-bg: var(--color-ink); --app-fg: var(--color-foam); }
+}
+html { background: var(--app-bg); color: var(--app-fg); }
+html[lang="ar"] { font-family: var(--font-arabic); }
+
+/* Signature motif: the dashed 30 m line, usable as a divider */
+.shore-line {
+  height: 6px;
+  background: repeating-linear-gradient(90deg, var(--color-alert) 0 18px, transparent 18px 30px);
+  border-radius: 3px;
+}

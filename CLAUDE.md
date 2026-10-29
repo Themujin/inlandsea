@@ -12,3 +12,5 @@ Spec: docs/SPEC.md (source of truth)
   injectManifest over out/) after `next build`, not by @serwist/next.
 
 @AGENTS.md
+- Brand: docs/BRAND.md. Colours/type come from app/brand.css tokens (bg-sea, bg-state-danger-strong, ...);
+  never hard-code hex in components. White text only on -strong state shades.

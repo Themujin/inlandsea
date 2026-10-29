@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Shoreline Guard">
+<g fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round">
+<g transform="translate(256 256) scale(0.82) translate(-256 -256)">
+<path d="M256 76 L388 122 V248 C388 334 332 398 256 436 C180 398 124 334 124 248 V122 Z" stroke-width="22"/>
+<path d="M150 252 C190 236 224 268 256 252 C288 236 322 268 362 252" stroke-width="18" stroke-dasharray="34 26"/>
+<path d="M150 318 C190 302 224 334 256 318 C288 302 322 334 362 318" stroke-width="18"/>
+<circle cx="256" cy="176" r="22" fill="#FFFFFF" stroke="none"/>
+</g></g>
+</svg>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Shoreline Guard">
+<rect width="512" height="512" rx="0" fill="#0B3B5C"/><g transform="translate(256 256) scale(0.8) translate(-256 -256)"><defs><clipPath id="sg-clip"><path d="M256 76 L388 122 V248 C388 334 332 398 256 436 C180 398 124 334 124 248 V122 Z"/></clipPath></defs>
+<g clip-path="url(#sg-clip)">
+<rect x="100" y="60" width="312" height="400" fill="#EBCB8F"/>
+<path d="M100 304 C150 284 204 324 256 304 C308 284 362 324 412 304 V460 H100 Z" fill="#1FA3A0"/>
+<path d="M100 356 C150 336 204 376 256 356 C308 336 362 376 412 356 V460 H100 Z" fill="#12708A"/>
+<path d="M100 252 C150 232 204 272 256 252 C308 232 362 272 412 252" fill="none" stroke="#E5484D" stroke-width="11" stroke-dasharray="24 16" stroke-linecap="round"/>
+</g><circle cx="256" cy="176" r="30" fill="#0B3B5C"/><circle cx="256" cy="176" r="11" fill="#F7F1E3"/>
+<path d="M256 76 L388 122 V248 C388 334 332 398 256 436 C180 398 124 334 124 248 V122 Z" fill="none" stroke="#F7F1E3" stroke-width="12" stroke-linejoin="round"/></g>
+</svg>
